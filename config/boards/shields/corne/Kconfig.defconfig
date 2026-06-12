@@ -46,3 +46,13 @@ config CORNE_CUSTOM_DISPLAY
 	bool "Custom Corne display"
 	depends on ZMK_DISPLAY
 
+config CORNE_LAYER_RGB
+	bool "Corne layer RGB colors"
+	depends on ZMK_RGB_UNDERGLOW && ZMK_SPLIT_ROLE_CENTRAL
+	default y if SHIELD_CORNE_LEFT
+
+config CORNE_RGB_DEFAULT_OFF
+	bool "Keep Corne RGB off after boot"
+	depends on ZMK_RGB_UNDERGLOW
+	default y if SHIELD_CORNE_LEFT || SHIELD_CORNE_RIGHT
+
