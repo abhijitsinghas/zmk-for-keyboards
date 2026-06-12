@@ -1,4 +1,4 @@
-if(CONFIG_CORNE_CUSTOM_DISPLAY)
+if(CONFIG_CORNE_CUSTOM_DISPLAY AND NOT CONFIG_SHIELD_NICE_VIEW)
   zephyr_library_named(corne_custom_display)
   zephyr_library_include_directories(${CMAKE_SOURCE_DIR}/include)
   zephyr_library_sources(src/custom_status_screen.c)

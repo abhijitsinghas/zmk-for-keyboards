@@ -149,7 +149,7 @@
         compatible = "zmk,keymap";
 
         default_layer {
-            display-name = "Default Layer";
+            display-name = "BASE";
 
             // -----------------------------------------------------------------------------------------
             // |  TAB |  Q  |  W  |  E  |  R  |  T  |   |  Y  |  U   |  I  |  O  |  P  | BSPC |
@@ -167,7 +167,7 @@ LSHIFT_CAPS  &kp Z  &kp X  &kp C     &kp V          &kp B    &kp N    &kp M     
         };
 
         lower_layer {
-            display-name = "Lower Layer";
+            display-name = "123";
 
             // -----------------------------------------------------------------------------------------
             // |  TAB |  1  |  2  |  3  |  4  |  5  |   |  6  |  7  |  8  |  9  |  0  | BSPC |
@@ -184,7 +184,7 @@ LSHIFT_CAPS  &kp Z  &kp X  &kp C     &kp V          &kp B    &kp N    &kp M     
         };
 
         raise_layer {
-            display-name = "Raise Layer";
+            display-name = "{}";
 
             // -----------------------------------------------------------------------------------------
             // | CAD  |  !  |  @  |  #  |  $  |  %  |   |  ^  |  &  |  *  |  (  |  )  | DEL  |
@@ -203,7 +203,7 @@ LSHIFT_CAPS  &kp Z  &kp X  &kp C     &kp V          &kp B    &kp N    &kp M     
         };
 
         mouse_layer {
-            display-name = "Mouse Layer";
+            display-name = "PTR";
 
             // -----------------------------------------------------------------------------------------
             // | BASE |     |     |     |     |     |   |     |     | MUP |     |     |      |
@@ -212,15 +212,15 @@ LSHIFT_CAPS  &kp Z  &kp X  &kp C     &kp V          &kp B    &kp N    &kp M     
             //                    |     |     | LCLK|   | RCLK| MCLK |     |
 
             bindings = <
-BASE_KEY  &trans    &trans    &trans    &trans    &trans    &trans    &trans          &mmv MOVE_UP    &trans        &trans           &trans
-&trans   &sk LGUI  &sk LALT  &sk LCTRL &sk LSHFT &trans    &trans    &mmv MOVE_LEFT &mmv MOVE_DOWN  &mmv MOVE_UP  &mmv MOVE_RIGHT  &trans
-&trans   &trans    &trans    &trans    &trans    &trans    &trans    &msc SCRL_LEFT &msc SCRL_DOWN  &msc SCRL_UP  &msc SCRL_RIGHT  &trans
-                                      &trans    &trans    &mkp LCLK  &mkp RCLK     &mkp MCLK       &trans
+BASE_KEY  &trans          &trans          &trans        &trans        &trans    &trans    &trans          &mmv MOVE_UP    &trans        &trans           &trans
+&trans   &msc SCRL_LEFT &msc SCRL_DOWN &msc SCRL_UP &msc SCRL_RIGHT &trans    &trans    &mmv MOVE_LEFT &mmv MOVE_DOWN  &mmv MOVE_UP  &mmv MOVE_RIGHT  &trans
+&trans   &sk LGUI       &sk LALT       &sk LCTRL    &sk LSHFT    &trans    &trans    &trans         &trans          &trans        &trans           &trans
+                                                  &trans    &trans    &mkp LCLK  &mkp RCLK     &mkp MCLK       &trans
             >;
         };
 
         adjust_layer {
-            display-name = "Adjust Layer";
+            display-name = "CFG";
 
             // -----------------------------------------------------------------------------------------
             // | BOOT | F1  | F2  | F3  | F4  | F5   |   | F6  | F7  | F8  | F9  | F10 | RESET|

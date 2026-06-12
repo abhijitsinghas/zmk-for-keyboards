@@ -13,8 +13,8 @@ The SVG updates automatically on push via the [Draw Keymap](.github/workflows/dr
 
 ## Display
 
-- **Left (central):** Built-in ZMK status screen (layer, battery, BT)
-- **Right (peripheral):** Custom P keycap logo with glitch effects + battery + BT status
+- **Left (central):** Custom OLED status screen: USB/BT profile, connection mark, battery percent/charging, layer icon
+- **Right (peripheral):** Custom OLED status screen: BT link to central, connection mark, local battery percent/charging, layer icon
 
 ## Interactive Viewer
 
