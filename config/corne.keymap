@@ -112,6 +112,15 @@
                 <&macro_tap &rgb_ug RGB_COLOR_HSB(0, 0, 30)>;
         };
 
+        alt_space: alt_space {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings =
+                <&macro_press &kp LALT>,
+                <&macro_tap &kp SPACE>,
+                <&macro_release &kp LALT>;
+        };
+
         cad: ctrl_alt_delete {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
@@ -148,14 +157,14 @@
 
             // -----------------------------------------------------------------------------------------
             // |  TAB |  1  |  2  |  3  |  4  |  5  |   |  6  |  7  |  8  |  9  |  0  | BSPC |
-            // |     |     |     |     |     |     |   | HOME| LFT | DWN |  UP | RGT | END  |
-            // | SHFT|     |     |     |     |     |   | PLAY| PRV | VDN | VUP | NXT | MUTE |
+            // |     | BT1 | BT2 | BT3 | BT4 | BT5 |   | HOME| LFT | DWN |  UP | RGT | END  |
+            // | SHFT| APP |     |     |     |     |   | PLAY| PRV | VDN | VUP | NXT | MUTE |
             //                    | GUI |     |     |   |     |      | ALT |
 
             bindings = <
 &kp TAB     &kp N1           &kp N2        &kp N3           &kp N4        &kp N5             &kp N6      &kp N7      &kp N8       &kp N9      &kp N0     &kp BSPC
-&trans     &trans          &trans       &trans          &trans       &trans          &kp HOME    &kp LEFT    &kp DOWN     &kp UP      &kp RIGHT  &kp END
-&kp LSHFT  &trans          &trans       &trans          &trans       &trans          &kp C_PP    &kp C_PREV   &kp C_VOL_DN  &kp C_VOL_UP  &kp C_NEXT  &kp C_MUTE
+&trans     &bt BT_SEL 0    &bt BT_SEL 1 &bt BT_SEL 2    &bt BT_SEL 3 &bt BT_SEL 4    &kp HOME    &kp LEFT    &kp DOWN     &kp UP      &kp RIGHT  &kp END
+&kp LSHFT  &alt_space      &trans       &trans          &trans       &trans          &kp C_PP    &kp C_PREV   &kp C_VOL_DN  &kp C_VOL_UP  &kp C_NEXT  &kp C_MUTE
                                            &kp LGUI         &trans        &trans             &trans      &trans      &kp RALT
             >;
         };
