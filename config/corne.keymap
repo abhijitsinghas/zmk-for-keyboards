@@ -5,10 +5,9 @@
  */
 
 #include <behaviors.dtsi>
-#include <dt-bindings/zmk/backlight.h>
 #include <dt-bindings/zmk/bt.h>
-#include <dt-bindings/zmk/ext_power.h>
 #include <dt-bindings/zmk/keys.h>
+#include <dt-bindings/zmk/mouse.h>
 #include <dt-bindings/zmk/outputs.h>
 #include <dt-bindings/zmk/rgb.h>
 
@@ -20,6 +19,13 @@
             bindings = <&kp ESC>;
             key-positions = <0 1>; // TAB + Q
             timeout-ms = <50>;
+        };
+
+        combo_caps_word {
+            bindings = <&caps_word>;
+            key-positions = <24 35>; // Left Shift + Right Shift
+            timeout-ms = <75>;
+            layers = <0>;
         };
     };
 
@@ -60,14 +66,14 @@
 
             // -----------------------------------------------------------------------------------------
             // |  TAB |  1  |  2  |  3  |  4  |  5  |   |  6  |  7  |  8  |  9  |  0  | BSPC |
-            // | BTCLR| BT1 | BT2 | BT3 | BT4 | BT5 |   | HOME| LFT | DWN |  UP | RGT | END  |
-            // | SHFT | RGB | BL  | RGB | OUT | PWR |   | PRV | VDN | VUP | NXT | PLAY| MUTE |
+            // | BT1 | BT2 | BT3 | BT4 | BT5 |BTCLR|   | HOME| LFT | DWN |  UP | RGT | END  |
+            // | SHFT | RGB |RGBFX| OUT |     |     |   | PLAY| PRV | VDN | VUP | NXT | MUTE |
             //                    | GUI |     |     |   |     |      | ALT |
 
             bindings = <
 &kp TAB     &kp N1           &kp N2        &kp N3           &kp N4        &kp N5             &kp N6      &kp N7      &kp N8       &kp N9      &kp N0     &kp BSPC
-&bt BT_CLR  &bt BT_SEL 0     &bt BT_SEL 1  &bt BT_SEL 2     &bt BT_SEL 3  &bt BT_SEL 4       &kp HOME    &kp LEFT    &kp DOWN     &kp UP      &kp RIGHT  &kp END
-&kp LSHFT   &rgb_ug RGB_TOG  &bl BL_TOG    &rgb_ug RGB_EFF  &out OUT_TOG  &ext_power EP_TOG  &kp C_PREV  &kp C_VOL_DN &kp C_VOL_UP  &kp C_NEXT  &kp C_PP   &kp C_MUTE
+&bt BT_SEL 0  &bt BT_SEL 1     &bt BT_SEL 2  &bt BT_SEL 3     &bt BT_SEL 4  &bt BT_CLR        &kp HOME    &kp LEFT    &kp DOWN     &kp UP      &kp RIGHT  &kp END
+&kp LSHFT   &rgb_ug RGB_TOG  &rgb_ug RGB_EFF  &out OUT_TOG  &trans  &trans  &kp C_PP    &kp C_PREV   &kp C_VOL_DN  &kp C_VOL_UP  &kp C_NEXT  &kp C_MUTE
                                            &kp LGUI         &trans        &trans             &trans      &trans      &kp RALT
             >;
         };
@@ -77,17 +83,34 @@
 
             // -----------------------------------------------------------------------------------------
             // | CAD  |  !  |  @  |  #  |  $  |  %  |   |  ^  |  &  |  *  |  (  |  )  | DEL  |
-            // | CTRL | OSG | OSA | OSC | OSS |     |   |  -  |  =  |  [  |  ]  |  \  |  `   |
-            // | SHFT |CAPW |     |     |     |     |   |  _  |  +  |  {  |  }  | "|" |  ~   |
+            // | CTRL | OSG | OSA | OSC | OSS |MOUS |   |  -  |  =  |  [  |  ]  |  \  |  `   |
+            // | SHFT |     |     |     |     |     |   |  _  |  +  |  {  |  }  | "|" |  ~   |
             //                    | GUI |     |     |   |     |      | ALT |
             // OSG/OSA/OSC/OSS = one-shot GUI/ALT/CTRL/SHIFT
-            // CAD = Ctrl + Alt + Delete, CAPW = Caps Word
+            // CAD = Ctrl + Alt + Delete, MOUS = Toggle Mouse Layer
 
             bindings = <
 &cad       &kp EXCL    &kp AT      &kp HASH    &kp DLLR    &kp PRCNT    &kp CARET  &kp AMPS   &kp ASTRK  &kp LPAR  &kp RPAR  &kp DELETE
-&kp LCTRL  &sk LGUI    &sk LALT    &sk LCTRL   &sk LSHFT   &trans       &kp MINUS  &kp EQUAL  &kp LBKT   &kp RBKT  &kp BSLH  &kp GRAVE
-&kp LSHFT  &caps_word  &trans      &trans      &trans      &trans       &kp UNDER  &kp PLUS   &kp LBRC   &kp RBRC  &kp PIPE  &kp TILDE
+&kp LCTRL  &sk LGUI    &sk LALT    &sk LCTRL   &sk LSHFT   &tog 3       &kp MINUS  &kp EQUAL  &kp LBKT   &kp RBKT  &kp BSLH  &kp GRAVE
+&kp LSHFT  &trans      &trans      &trans      &trans      &trans       &kp UNDER  &kp PLUS   &kp LBRC   &kp RBRC  &kp PIPE  &kp TILDE
                                   &kp LGUI    &trans      &trans       &trans     &trans     &kp RALT
+            >;
+        };
+
+        mouse_layer {
+            display-name = "Mouse Layer";
+
+            // -----------------------------------------------------------------------------------------
+            // | BASE |     |     |     |     |     |   |     |     | MUP |     |     |      |
+            // |      | OSG | OSA | OSC | OSS |     |   |     | MLFT| MDN | MUP | MRGT|      |
+            // |      |     |     |     |     |     |   |     | SLFT| SDN | SUP | SRGT|      |
+            //                    |     |     | LCLK|   | RCLK| MCLK |     |
+
+            bindings = <
+&to 0    &trans    &trans    &trans    &trans    &trans    &trans    &trans          &mmv MOVE_UP    &trans        &trans           &trans
+&trans   &sk LGUI  &sk LALT  &sk LCTRL &sk LSHFT &trans    &trans    &mmv MOVE_LEFT &mmv MOVE_DOWN  &mmv MOVE_UP  &mmv MOVE_RIGHT  &trans
+&trans   &trans    &trans    &trans    &trans    &trans    &trans    &msc SCRL_LEFT &msc SCRL_DOWN  &msc SCRL_UP  &msc SCRL_RIGHT  &trans
+                                      &trans    &trans    &mkp LCLK  &mkp RCLK     &mkp MCLK       &trans
             >;
         };
     };
