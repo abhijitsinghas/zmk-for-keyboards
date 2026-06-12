@@ -18,6 +18,8 @@ BOARD_NAME  ?= $(basename $(notdir $(KEYMAP)))
 SVG_FILE    ?= $(OUT_DIR)/$(BOARD_NAME)_keymap.svg
 YAML_FILE   ?= /tmp/$(BOARD_NAME)_keymap.yaml
 HTML_FILE   ?= $(OUT_DIR)/keymap-viewer.html
+KEYMAP_CONFIG ?= keymap_drawer.config.yaml
+KEYMAP_CONFIG_ARG := $(if $(wildcard $(KEYMAP_CONFIG)),-c $(KEYMAP_CONFIG),)
 BROWSER     ?= Google Chrome
 
 # --- Python / pip detection ---
@@ -61,11 +63,11 @@ install: check-deps
 
 svg: $(SVG_FILE)
 
-$(SVG_FILE): $(KEYMAP)
+$(SVG_FILE): $(KEYMAP) $(KEYMAP_CONFIG)
 	@echo "==> Parsing $(KEYMAP)..."
-	keymap parse -z $(KEYMAP) > $(YAML_FILE)
+	keymap $(KEYMAP_CONFIG_ARG) parse -z $(KEYMAP) > $(YAML_FILE)
 	@echo "==> Drawing SVG -> $(SVG_FILE)..."
-	keymap draw $(YAML_FILE) > $(SVG_FILE)
+	keymap $(KEYMAP_CONFIG_ARG) draw $(YAML_FILE) > $(SVG_FILE)
 	@echo "==> Generated $(SVG_FILE) ($$(wc -c < $(SVG_FILE) | tr -d ' ') bytes)"
 
 viewer: $(HTML_FILE)

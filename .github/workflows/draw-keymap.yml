@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - "config/**/*.keymap"
+      - "keymap_drawer.config.yaml"
 
 jobs:
   draw:
@@ -24,8 +25,8 @@ jobs:
 
       - name: Parse and draw keymap
         run: |
-          keymap parse -z config/corne.keymap > /tmp/corne_keymap.yaml
-          keymap draw /tmp/corne_keymap.yaml > corne_keymap.svg
+          keymap -c keymap_drawer.config.yaml parse -z config/corne.keymap > /tmp/corne_keymap.yaml
+          keymap -c keymap_drawer.config.yaml draw /tmp/corne_keymap.yaml > corne_keymap.svg
 
       - name: Commit updated SVG
         run: |

@@ -1,0 +1,18 @@
+parse_config:
+  raw_binding_map:
+    "&cad": "CAD"
+    "&alt_space": "APP"
+    "&caps_word": "CAPW"
+    "&bootloader": "BOOT"
+    "&sys_reset": "RESET"
+    "&mmv MOVE_UP": "M↑"
+    "&mmv MOVE_DOWN": "M↓"
+    "&mmv MOVE_LEFT": "M←"
+    "&mmv MOVE_RIGHT": "M→"
+    "&msc SCRL_UP": "S↑"
+    "&msc SCRL_DOWN": "S↓"
+    "&msc SCRL_LEFT": "S←"
+    "&msc SCRL_RIGHT": "S→"
+    "&mkp LCLK": "LCLK"
+    "&mkp RCLK": "RCLK"
+    "&mkp MCLK": "MCLK"
