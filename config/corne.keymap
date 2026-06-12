@@ -13,6 +13,27 @@
 #include <dt-bindings/zmk/rgb.h>
 
 / {
+    combos {
+        compatible = "zmk,combos";
+
+        combo_esc {
+            bindings = <&kp ESC>;
+            key-positions = <0 1>; // TAB + Q
+            timeout-ms = <50>;
+        };
+    };
+
+    macros {
+        cad: ctrl_alt_delete {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings =
+                <&macro_press &kp LCTRL &kp LALT>,
+                <&macro_tap &kp DEL>,
+                <&macro_release &kp LCTRL &kp LALT>;
+        };
+    };
+
     keymap {
         compatible = "zmk,keymap";
 
@@ -22,14 +43,15 @@
             // -----------------------------------------------------------------------------------------
             // |  TAB |  Q  |  W  |  E  |  R  |  T  |   |  Y  |  U   |  I  |  O  |  P  | BSPC |
             // | CTRL |  A  |  S  |  D  |  F  |  G  |   |  H  |  J   |  K  |  L  |  ;  |  '   |
-            // | SHFT |  Z  |  X  |  C  |  V  |  B  |   |  N  |  M   |  ,  |  .  |  /  | ESC  |
-            //                    | GUI | ENT | LWR |   | RSE | SPC  | ALT |
+            // | SHFT |  Z  |  X  |  C  |  V  |  B  |   |  N  |  M   |  ,  |  .  |  /  | SHFT |
+            //                    | GUI | SPC/LWR | ENT |   | DEL | SPC/RSE | ALT |
+            // Combo: TAB + Q = ESC
 
             bindings = <
-&kp TAB    &kp Q  &kp W  &kp E     &kp R    &kp T  &kp Y  &kp U      &kp I      &kp O    &kp P     &kp BACKSPACE
-&kp LCTRL  &kp A  &kp S  &kp D     &kp F    &kp G  &kp H  &kp J      &kp K      &kp L    &kp SEMI  &kp SQT
-&kp LSHFT  &kp Z  &kp X  &kp C     &kp V    &kp B  &kp N  &kp M      &kp COMMA  &kp DOT  &kp FSLH  &kp ESC
-                         &kp LGUI  &kp RET  &mo 1  &mo 2  &kp SPACE  &kp RALT
+&kp TAB    &kp Q  &kp W  &kp E     &kp R          &kp T    &kp Y    &kp U          &kp I      &kp O    &kp P     &kp BACKSPACE
+&kp LCTRL  &kp A  &kp S  &kp D     &kp F          &kp G    &kp H    &kp J          &kp K      &kp L    &kp SEMI  &kp SQT
+&kp LSHFT  &kp Z  &kp X  &kp C     &kp V          &kp B    &kp N    &kp M          &kp COMMA  &kp DOT  &kp FSLH  &kp RSHFT
+                         &kp LGUI  &lt 1 SPACE    &kp RET  &kp DEL  &lt 2 SPACE    &kp RALT
             >;
         };
 
@@ -38,15 +60,15 @@
 
             // -----------------------------------------------------------------------------------------
             // |  TAB |  1  |  2  |  3  |  4  |  5  |   |  6  |  7  |  8  |  9  |  0  | BSPC |
-            // | BTCLR| BT1 | BT2 | BT3 | BT4 | BT5 |   | LFT | DWN |  UP | RGT |     |      |
-            // | SHFT | RGB | BL  | RGB | OUT | PWR |   | PRV | VDN | VUP | NXT |     |      |
+            // | BTCLR| BT1 | BT2 | BT3 | BT4 | BT5 |   | HOME| LFT | DWN |  UP | RGT | END  |
+            // | SHFT | RGB | BL  | RGB | OUT | PWR |   | PRV | VDN | VUP | NXT | PLAY| MUTE |
             //                    | GUI |     |     |   |     |      | ALT |
 
             bindings = <
-&kp TAB     &kp N1           &kp N2        &kp N3           &kp N4        &kp N5             &kp N6          &kp N7             &kp N8           &kp N9      &kp N0  &kp BSPC
-&bt BT_CLR  &bt BT_SEL 0     &bt BT_SEL 1  &bt BT_SEL 2     &bt BT_SEL 3  &bt BT_SEL 4       &kp LEFT        &kp DOWN           &kp UP           &kp RIGHT   &trans  &trans
-&kp LSHFT   &rgb_ug RGB_TOG  &bl BL_TOG    &rgb_ug RGB_EFF  &out OUT_TOG  &ext_power EP_TOG  &kp LS(C_PREV)  &kp C_VOLUME_DOWN  &kp C_VOLUME_UP  &kp C_NEXT  &trans  &trans
-                                           &kp LGUI         &trans        &trans             &trans          &trans             &kp RALT
+&kp TAB     &kp N1           &kp N2        &kp N3           &kp N4        &kp N5             &kp N6      &kp N7      &kp N8       &kp N9      &kp N0     &kp BSPC
+&bt BT_CLR  &bt BT_SEL 0     &bt BT_SEL 1  &bt BT_SEL 2     &bt BT_SEL 3  &bt BT_SEL 4       &kp HOME    &kp LEFT    &kp DOWN     &kp UP      &kp RIGHT  &kp END
+&kp LSHFT   &rgb_ug RGB_TOG  &bl BL_TOG    &rgb_ug RGB_EFF  &out OUT_TOG  &ext_power EP_TOG  &kp C_PREV  &kp C_VOL_DN &kp C_VOL_UP  &kp C_NEXT  &kp C_PP   &kp C_MUTE
+                                           &kp LGUI         &trans        &trans             &trans      &trans      &kp RALT
             >;
         };
 
@@ -54,16 +76,18 @@
             display-name = "Raise Layer";
 
             // -----------------------------------------------------------------------------------------
-            // |  TAB |  !  |  @  |  #  |  $  |  %  |   |  ^  |  &  |  *  |  (  |  )  | BSPC |
-            // | CTRL |     |     |     |     |     |   |  -  |  =  |  [  |  ]  |  \  |  `   |
-            // | SHFT |     |     |     |     |     |   |  _  |  +  |  {  |  }  | "|" |  ~   |
+            // | CAD  |  !  |  @  |  #  |  $  |  %  |   |  ^  |  &  |  *  |  (  |  )  | DEL  |
+            // | CTRL | OSG | OSA | OSC | OSS |     |   |  -  |  =  |  [  |  ]  |  \  |  `   |
+            // | SHFT |CAPW |     |     |     |     |   |  _  |  +  |  {  |  }  | "|" |  ~   |
             //                    | GUI |     |     |   |     |      | ALT |
+            // OSG/OSA/OSC/OSS = one-shot GUI/ALT/CTRL/SHIFT
+            // CAD = Ctrl + Alt + Delete, CAPW = Caps Word
 
             bindings = <
-&kp TAB    &kp EXCL  &kp AT  &kp HASH  &kp DLLR  &kp PRCNT  &kp CARET  &kp AMPS   &kp ASTRK  &kp LPAR  &kp RPAR  &kp DELETE
-&kp LCTRL  &trans    &trans  &trans    &trans    &trans     &kp MINUS  &kp EQUAL  &kp LBKT   &kp RBKT  &kp BSLH  &kp GRAVE
-&kp LSHFT  &trans    &trans  &trans    &trans    &trans     &kp UNDER  &kp PLUS   &kp LBRC   &kp RBRC  &kp PIPE  &kp TILDE
-                             &kp LGUI  &trans    &trans     &trans     &trans     &kp RALT
+&cad       &kp EXCL    &kp AT      &kp HASH    &kp DLLR    &kp PRCNT    &kp CARET  &kp AMPS   &kp ASTRK  &kp LPAR  &kp RPAR  &kp DELETE
+&kp LCTRL  &sk LGUI    &sk LALT    &sk LCTRL   &sk LSHFT   &trans       &kp MINUS  &kp EQUAL  &kp LBKT   &kp RBKT  &kp BSLH  &kp GRAVE
+&kp LSHFT  &caps_word  &trans      &trans      &trans      &trans       &kp UNDER  &kp PLUS   &kp LBRC   &kp RBRC  &kp PIPE  &kp TILDE
+                                  &kp LGUI    &trans      &trans       &trans     &trans     &kp RALT
             >;
         };
     };
