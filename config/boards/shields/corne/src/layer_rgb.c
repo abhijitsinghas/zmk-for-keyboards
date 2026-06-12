@@ -1,9 +1,8 @@
 /*
  * Layer-driven RGB underglow colors for Corne.
  *
- * This keeps RGB color tied to the currently active layer instead of relying on
- * key macros. It intentionally does not save color changes to settings on every
- * layer change, avoiding flash wear.
+ * This keeps RGB color tied to the currently active layer, but only while RGB is
+ * explicitly on. It does not turn RGB on and does not force a particular effect.
  */
 
 #include <zephyr/kernel.h>
@@ -54,18 +53,20 @@ static void invoke_peripheral_rgb(uint8_t source, uint32_t command, uint32_t val
     }
 }
 
-static void sync_peripherals_rgb(const struct layer_rgb_color color, bool force_solid_effect) {
+static void sync_peripherals_rgb(const struct layer_rgb_color color) {
     for (uint8_t source = 0; source < ZMK_SPLIT_CENTRAL_PERIPHERAL_COUNT; source++) {
-        if (force_solid_effect) {
-            invoke_peripheral_rgb(source, RGB_EFS_CMD, 0);
-        }
-
-        invoke_peripheral_rgb(source, RGB_COLOR_HSB_CMD, RGB_COLOR_HSB_VAL(color.h, color.s, color.b));
+        invoke_peripheral_rgb(source, RGB_COLOR_HSB_CMD,
+                              RGB_COLOR_HSB_VAL(color.h, color.s, color.b));
     }
 }
 
 static int layer_rgb_listener(const zmk_event_t *eh) {
-    static bool forced_solid_effect;
+    bool rgb_on;
+    int err = zmk_rgb_underglow_get_state(&rgb_on);
+
+    if (err < 0 || !rgb_on) {
+        return err;
+    }
 
     uint8_t layer = zmk_keymap_highest_layer_active();
 
@@ -75,17 +76,7 @@ static int layer_rgb_listener(const zmk_event_t *eh) {
 
     const struct layer_rgb_color color = layer_colors[layer];
 
-    /* Existing keyboards may have a saved animated effect from previous firmware.
-     * Force solid once per boot so HSB layer colors are actually visible, including
-     * on the peripheral half.
-     */
-    if (!forced_solid_effect) {
-        zmk_rgb_underglow_select_effect(0);
-        sync_peripherals_rgb(color, true);
-        forced_solid_effect = true;
-    } else {
-        sync_peripherals_rgb(color, false);
-    }
+    sync_peripherals_rgb(color);
 
     return zmk_rgb_underglow_set_hsb((struct zmk_led_hsb){
         .h = color.h,

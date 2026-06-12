@@ -143,7 +143,7 @@
         compatible = "zmk,keymap";
 
         default_layer {
-            display-name = "BASE";
+            display-name = "Base";
 
             // -----------------------------------------------------------------------------------------
             // |  TAB |  Q  |  W  |  E  |  R  |  T  |   |  Y  |  U   |  I  |  O  |  P  | BSPC |
@@ -161,7 +161,7 @@ LSHIFT_CAPS  &kp Z  &kp X  &kp C     &kp V          &kp B    &kp N    &kp M     
         };
 
         lower_layer {
-            display-name = "123";
+            display-name = "Numbers";
 
             // -----------------------------------------------------------------------------------------
             // |  TAB |  1  |  2  |  3  |  4  |  5  |   |  6  |  7  |  8  |  9  |  0  | BSPC |
@@ -178,7 +178,7 @@ LSHIFT_CAPS  &kp Z  &kp X  &kp C     &kp V          &kp B    &kp N    &kp M     
         };
 
         raise_layer {
-            display-name = "{}";
+            display-name = "Symbols";
 
             // -----------------------------------------------------------------------------------------
             // | CAD  |  !  |  @  |  #  |  $  |  %  |   |  ^  |  &  |  *  |  (  |  )  | DEL  |
@@ -197,7 +197,7 @@ LSHIFT_CAPS  &kp Z  &kp X  &kp C     &kp V          &kp B    &kp N    &kp M     
         };
 
         mouse_layer {
-            display-name = "PTR";
+            display-name = "Mouse";
 
             // -----------------------------------------------------------------------------------------
             // | BASE |     |     |     |     |     |   |     |     | MUP |     |     |      |
@@ -214,7 +214,7 @@ BASE_KEY  &trans          &trans          &trans        &trans        &trans    
         };
 
         adjust_layer {
-            display-name = "CFG";
+            display-name = "Adjust";
 
             // -----------------------------------------------------------------------------------------
             // | BOOT | F1  | F2  | F3  | F4  | F5   |   | F6  | F7  | F8  | F9  | F10 | RESET|
