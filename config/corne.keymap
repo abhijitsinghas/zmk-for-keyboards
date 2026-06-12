@@ -56,6 +56,15 @@
         };
     };
 
+    conditional_layers {
+        compatible = "zmk,conditional-layers";
+
+        adjust_layer {
+            if-layers = <1 2>;
+            then-layer = <4>;
+        };
+    };
+
     macros {
         lower_rgb: lower_rgb {
             compatible = "zmk,behavior-macro";
@@ -139,14 +148,14 @@
 
             // -----------------------------------------------------------------------------------------
             // |  TAB |  1  |  2  |  3  |  4  |  5  |   |  6  |  7  |  8  |  9  |  0  | BSPC |
-            // | BT1 | BT2 | BT3 | BT4 | BT5 |BTCLR|   | HOME| LFT | DWN |  UP | RGT | END  |
-            // | SHFT | RGB |RGBFX| OUT |     |     |   | PLAY| PRV | VDN | VUP | NXT | MUTE |
+            // |     |     |     |     |     |     |   | HOME| LFT | DWN |  UP | RGT | END  |
+            // | SHFT|     |     |     |     |     |   | PLAY| PRV | VDN | VUP | NXT | MUTE |
             //                    | GUI |     |     |   |     |      | ALT |
 
             bindings = <
 &kp TAB     &kp N1           &kp N2        &kp N3           &kp N4        &kp N5             &kp N6      &kp N7      &kp N8       &kp N9      &kp N0     &kp BSPC
-&bt BT_SEL 0  &bt BT_SEL 1     &bt BT_SEL 2  &bt BT_SEL 3     &bt BT_SEL 4  &bt BT_CLR        &kp HOME    &kp LEFT    &kp DOWN     &kp UP      &kp RIGHT  &kp END
-&kp LSHFT   &rgb_ug RGB_TOG  &rgb_ug RGB_EFF  &out OUT_TOG  &trans  &trans  &kp C_PP    &kp C_PREV   &kp C_VOL_DN  &kp C_VOL_UP  &kp C_NEXT  &kp C_MUTE
+&trans     &trans          &trans       &trans          &trans       &trans          &kp HOME    &kp LEFT    &kp DOWN     &kp UP      &kp RIGHT  &kp END
+&kp LSHFT  &trans          &trans       &trans          &trans       &trans          &kp C_PP    &kp C_PREV   &kp C_VOL_DN  &kp C_VOL_UP  &kp C_NEXT  &kp C_MUTE
                                            &kp LGUI         &trans        &trans             &trans      &trans      &kp RALT
             >;
         };
@@ -184,6 +193,24 @@
 &trans   &sk LGUI  &sk LALT  &sk LCTRL &sk LSHFT &trans    &trans    &mmv MOVE_LEFT &mmv MOVE_DOWN  &mmv MOVE_UP  &mmv MOVE_RIGHT  &trans
 &trans   &trans    &trans    &trans    &trans    &trans    &trans    &msc SCRL_LEFT &msc SCRL_DOWN  &msc SCRL_UP  &msc SCRL_RIGHT  &trans
                                       &trans    &trans    &mkp LCLK  &mkp RCLK     &mkp MCLK       &trans
+            >;
+        };
+
+        adjust_layer {
+            display-name = "Adjust Layer";
+
+            // -----------------------------------------------------------------------------------------
+            // | BOOT | F1  | F2  | F3  | F4  | F5   |   | F6  | F7  | F8  | F9  | F10 | RESET|
+            // | BTCLR| BT1 | BT2 | BT3 | BT4 | BT5  |   | USB | BLE | OUT | BRI+| BRI-| RGB  |
+            // |      | HUE+| HUE-| SAT+| SAT-| RGBFX|   | SPD+| SPD-| F11 | F12 | PSCR|      |
+            //                    |     |     |     |   |     |      |     |
+            // Adjust layer RGB color target: amber/orange RGB_COLOR_HSB(35, 100, 30)
+
+            bindings = <
+&bootloader  &kp F1          &kp F2          &kp F3          &kp F4          &kp F5             &kp F6          &kp F7          &kp F8     &kp F9     &kp F10    &reset
+&bt BT_CLR   &bt BT_SEL 0    &bt BT_SEL 1    &bt BT_SEL 2    &bt BT_SEL 3    &bt BT_SEL 4       &out OUT_USB    &out OUT_BLE    &out OUT_TOG &rgb_ug RGB_BRI &rgb_ug RGB_BRD &rgb_ug RGB_TOG
+&trans       &rgb_ug RGB_HUI &rgb_ug RGB_HUD &rgb_ug RGB_SAI &rgb_ug RGB_SAD &rgb_ug RGB_EFF    &rgb_ug RGB_SPI &rgb_ug RGB_SPD &kp F11    &kp F12    &kp PSCRN  &trans
+                                                       &trans          &trans          &trans             &trans          &trans          &trans
             >;
         };
     };
