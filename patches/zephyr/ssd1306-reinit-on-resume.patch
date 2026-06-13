@@ -1,0 +1,67 @@
+--- a/drivers/display/ssd1306.c
++++ b/drivers/display/ssd1306.c
+@@ -229,6 +229,11 @@
+ {
+ 	const struct ssd1306_config *config = dev->config;
+ 	uint8_t cmd_buf[] = {
++		SSD1306_SET_ENTIRE_DISPLAY_OFF,
++		(config->color_inversion ? SSD1306_SET_REVERSE_DISPLAY
++					 : SSD1306_SET_NORMAL_DISPLAY),
++	};
++	uint8_t on_cmd[] = {
+ 		SSD1306_DISPLAY_ON,
+ 	};
+ 
+@@ -238,7 +243,51 @@
+ 		k_sleep(K_MSEC(SSD1306_SUPPLY_DELAY));
+ 	}
+ 
+-	return ssd1306_write_bus(dev, cmd_buf, sizeof(cmd_buf), true);
++	/*
++	 * External power can be cut while the MCU remains running. In that
++	 * case the SSD1306 loses its controller register state, and a simple
++	 * DISPLAY_ON command is not enough to bring the panel back. Re-send
++	 * the software init sequence without toggling the hardware reset pin.
++	 */
++#if (DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(solomon_ssd1306fb, i2c) || \
++	DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(solomon_ssd1309fb, i2c) || \
++	DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(sinowealth_sh1106, i2c))
++	if (config->write_bus == ssd1306_write_bus_i2c) {
++		(void)i2c_recover_bus(config->bus.i2c.bus);
++	}
++#endif
++
++	if (ssd1306_set_timing_setting(dev)) {
++		return -EIO;
++	}
++
++	if (ssd1306_set_hardware_config(dev)) {
++		return -EIO;
++	}
++
++	if (ssd1306_set_panel_orientation(dev)) {
++		return -EIO;
++	}
++
++	if (!config->ssd1309_compatible) {
++		if (ssd1306_set_charge_pump(dev)) {
++			return -EIO;
++		}
++
++		if (ssd1306_set_iref_mode(dev)) {
++			return -EIO;
++		}
++	}
++
++	if (ssd1306_write_bus(dev, cmd_buf, sizeof(cmd_buf), true)) {
++		return -EIO;
++	}
++
++	if (ssd1306_set_contrast(dev, CONFIG_SSD1306_DEFAULT_CONTRAST)) {
++		return -EIO;
++	}
++
++	return ssd1306_write_bus(dev, on_cmd, sizeof(on_cmd), true);
+ }
+ 
+ static int ssd1306_suspend(const struct device *dev)

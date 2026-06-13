@@ -1,0 +1,35 @@
+--- a/app/src/ext_power_generic.c
++++ b/app/src/ext_power_generic.c
+@@ -13,6 +13,7 @@
+ #include <zephyr/kernel.h>
+ #include <zephyr/settings/settings.h>
+ #include <zephyr/drivers/gpio.h>
++#include <zephyr/drivers/display.h>
+ 
+ #include <drivers/ext_power.h>
+ 
+@@ -68,6 +69,24 @@
+         }
+     }
+     data->status = true;
++
++#if DT_HAS_CHOSEN(zephyr_display)
++    /*
++     * If external power also supplies the display, restoring power leaves
++     * OLED controllers powered but uninitialized. Wait briefly for VCC to
++     * settle, then unblank the display so its driver can re-send init.
++     */
++    k_msleep(config->init_delay_ms ? config->init_delay_ms : 10);
++
++    const struct device *display = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
++    if (device_is_ready(display)) {
++        int ret = display_blanking_off(display);
++        if (ret < 0) {
++            LOG_WRN("Failed to resume display after ext-power enable: %d", ret);
++        }
++    }
++#endif
++
+     return ext_power_save_state();
+ }
+ 
