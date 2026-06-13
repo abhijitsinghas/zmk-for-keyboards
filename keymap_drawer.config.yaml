@@ -5,6 +5,7 @@ parse_config:
     "&caps_word": "CAPW"
     "&bootloader": "BOOT"
     "&sys_reset": "RESET"
+    "&display_power DISPLAY_POWER_INFO_CMD": "INFO"
     "&mmv MOVE_UP": "M↑"
     "&mmv MOVE_DOWN": "M↓"
     "&mmv MOVE_LEFT": "M←"
