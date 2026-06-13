@@ -26,10 +26,10 @@ index 0000000..febad21
 +include: one_param.yaml
 diff --git a/app/include/dt-bindings/zmk/display_power.h b/app/include/dt-bindings/zmk/display_power.h
 new file mode 100644
-index 0000000..497c38b
+index 0000000..83d6091
 --- /dev/null
 +++ b/app/include/dt-bindings/zmk/display_power.h
-@@ -0,0 +1,13 @@
+@@ -0,0 +1,16 @@
 +/*
 + * Copyright (c) 2026 The ZMK Contributors
 + *
@@ -43,11 +43,14 @@ index 0000000..497c38b
 +#define DISPLAY_POWER_OPTIMAL_CMD 2
 +#define DISPLAY_POWER_ON_CMD 3
 +#define DISPLAY_POWER_OFF_CMD 4
++#define DISPLAY_POWER_TEST_LOW_BATTERY_CMD 5
++#define DISPLAY_POWER_TEST_EXTREME_BATTERY_CMD 6
++#define DISPLAY_POWER_TEST_CRITICAL_BATTERY_CMD 7
 diff --git a/app/include/zmk/display.h b/app/include/zmk/display.h
-index d206d35..c58c74b 100644
+index d206d35..5f52d28 100644
 --- a/app/include/zmk/display.h
 +++ b/app/include/zmk/display.h
-@@ -10,10 +10,24 @@
+@@ -10,10 +10,25 @@
  
  #pragma once
  
@@ -65,7 +68,8 @@ index d206d35..c58c74b 100644
 +
 +void zmk_display_force_refresh(void);
 +void zmk_display_show_for_ms(uint32_t timeout_ms);
-+void zmk_display_notify_for_ms(const char *line1, const char *line2, uint32_t timeout_ms);
++void zmk_display_notify_for_ms(const char *line1, const char *line2, uint32_t timeout_ms,
++                               bool flash);
 +enum zmk_display_power_mode zmk_display_power_get_mode(void);
 +void zmk_display_power_set_mode(enum zmk_display_power_mode mode);
 +void zmk_display_power_cycle_mode(void);
@@ -74,10 +78,10 @@ index d206d35..c58c74b 100644
   * @brief Macro to define a ZMK event listener that handles the thread safety of fetching
 diff --git a/app/src/behaviors/behavior_display_power.c b/app/src/behaviors/behavior_display_power.c
 new file mode 100644
-index 0000000..5ede2a8
+index 0000000..802a4b0
 --- /dev/null
 +++ b/app/src/behaviors/behavior_display_power.c
-@@ -0,0 +1,83 @@
+@@ -0,0 +1,92 @@
 +/*
 + * Copyright (c) 2026 The ZMK Contributors
 + *
@@ -138,6 +142,15 @@ index 0000000..5ede2a8
 +    case DISPLAY_POWER_OFF_CMD:
 +        zmk_display_power_set_mode(ZMK_DISPLAY_POWER_MODE_OFF);
 +        return ZMK_BEHAVIOR_OPAQUE;
++    case DISPLAY_POWER_TEST_LOW_BATTERY_CMD:
++        zmk_display_notify_for_ms("BATTERY LOW", "20%", 5000, false);
++        return ZMK_BEHAVIOR_OPAQUE;
++    case DISPLAY_POWER_TEST_EXTREME_BATTERY_CMD:
++        zmk_display_notify_for_ms("EXTREMELY LOW", "10%", 10000, false);
++        return ZMK_BEHAVIOR_OPAQUE;
++    case DISPLAY_POWER_TEST_CRITICAL_BATTERY_CMD:
++        zmk_display_notify_for_ms("!!! BATTERY !!!", "CRITICAL 5%", 30000, true);
++        return ZMK_BEHAVIOR_OPAQUE;
 +    default:
 +        LOG_ERR("Unknown display power command: %d", binding->param1);
 +        return -ENOTSUP;
@@ -162,7 +175,7 @@ index 0000000..5ede2a8
 +
 +#endif /* DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT) */
 diff --git a/app/src/display/main.c b/app/src/display/main.c
-index a86bfad..564e5b5 100644
+index a86bfad..49178f8 100644
 --- a/app/src/display/main.c
 +++ b/app/src/display/main.c
 @@ -4,6 +4,9 @@
@@ -217,7 +230,7 @@ index a86bfad..564e5b5 100644
  
  K_WORK_DEFINE(display_tick_work, display_tick_cb);
  
-@@ -61,7 +83,19 @@ void display_timer_cb() { k_work_submit_to_queue(zmk_display_work_q(), &display_
+@@ -61,7 +83,23 @@ void display_timer_cb() { k_work_submit_to_queue(zmk_display_work_q(), &display_
  
  K_TIMER_DEFINE(display_timer, display_timer_cb, NULL);
  
@@ -228,8 +241,12 @@ index a86bfad..564e5b5 100644
 +static char notification_line1[24];
 +static char notification_line2[24];
 +static uint32_t notification_timeout_ms;
++static bool notification_flash = false;
++static bool notification_visible = true;
 +#if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
 +static bool low_battery_alerted = false;
++static bool extreme_battery_alerted = false;
++static bool critical_battery_alerted = false;
 +#endif
 +
 +static const struct device *ext_power_device(void) { return device_get_binding("EXT_POWER"); }
@@ -238,7 +255,7 @@ index a86bfad..564e5b5 100644
  #if DT_HAS_CHOSEN(zmk_display_led)
      led_on(display_led, display_led_idx);
  #endif
-@@ -72,6 +106,330 @@ void unblank_display_cb(struct k_work *work) {
+@@ -72,6 +110,381 @@ void unblank_display_cb(struct k_work *work) {
  #endif // !IS_ENABLED(CONFIG_ARCH_POSIX)
  }
  
@@ -430,7 +447,33 @@ index a86bfad..564e5b5 100644
 +    return display_write(display, 0, 0, &desc, raw_notification_buf);
 +}
 +
++static int raw_clear_notification(void) {
++    struct display_capabilities caps;
++    display_get_capabilities(display, &caps);
++
++    if (!(caps.screen_info & SCREEN_INFO_MONO_VTILED) || caps.x_resolution > RAW_NOTIFICATION_MAX_WIDTH ||
++        caps.y_resolution > RAW_NOTIFICATION_MAX_HEIGHT) {
++        return -ENOTSUP;
++    }
++
++    size_t buf_size = caps.x_resolution * caps.y_resolution / 8;
++    memset(raw_notification_buf, caps.current_pixel_format == PIXEL_FORMAT_MONO10 ? 0x00 : 0xff,
++           buf_size);
++
++    struct display_buffer_descriptor desc = {
++        .buf_size = buf_size,
++        .width = caps.x_resolution,
++        .pitch = caps.x_resolution,
++        .height = caps.y_resolution,
++        .frame_incomplete = false,
++    };
++
++    return display_write(display, 0, 0, &desc, raw_notification_buf);
++}
++
++static void flash_raw_notification_cb(struct k_work *work);
 +static void clear_raw_notification_cb(struct k_work *work);
++K_WORK_DELAYABLE_DEFINE(flash_raw_notification_work, flash_raw_notification_cb);
 +K_WORK_DELAYABLE_DEFINE(clear_raw_notification_work, clear_raw_notification_cb);
 +
 +static void show_raw_notification_cb(struct k_work *work) {
@@ -443,6 +486,7 @@ index a86bfad..564e5b5 100644
 +    k_work_cancel(&force_refresh_display_work);
 +    k_work_cancel_delayable(&physically_power_off_display_work);
 +    k_work_cancel_delayable(&clear_raw_notification_work);
++    k_work_cancel_delayable(&flash_raw_notification_work);
 +
 +    const struct device *ext_power = ext_power_device();
 +    if (ext_power != NULL) {
@@ -457,6 +501,7 @@ index a86bfad..564e5b5 100644
 +    k_work_cancel(&force_refresh_display_work);
 +
 +    display_blanking_off(display);
++    notification_visible = true;
 +
 +    if (raw_draw_notification() < 0) {
 +        notification_active = false;
@@ -466,14 +511,35 @@ index a86bfad..564e5b5 100644
 +        return;
 +    }
 +
++    if (notification_flash) {
++        k_work_reschedule_for_queue(zmk_display_work_q(), &flash_raw_notification_work, K_MSEC(500));
++    }
++
 +    k_work_reschedule_for_queue(zmk_display_work_q(), &clear_raw_notification_work,
 +                                K_MSEC(notification_timeout_ms));
 +}
 +
 +K_WORK_DEFINE(show_raw_notification_work, show_raw_notification_cb);
 +
++static void flash_raw_notification_cb(struct k_work *work) {
++    if (!notification_active || !notification_flash) {
++        return;
++    }
++
++    notification_visible = !notification_visible;
++    if (notification_visible) {
++        raw_draw_notification();
++    } else {
++        raw_clear_notification();
++    }
++
++    k_work_reschedule_for_queue(zmk_display_work_q(), &flash_raw_notification_work, K_MSEC(500));
++}
++
 +static void clear_raw_notification_cb(struct k_work *work) {
 +    notification_active = false;
++    notification_flash = false;
++    k_work_cancel_delayable(&flash_raw_notification_work);
 +
 +    if (display_power_mode == ZMK_DISPLAY_POWER_MODE_ON) {
 +        force_refresh_display_cb(work);
@@ -482,10 +548,12 @@ index a86bfad..564e5b5 100644
 +    }
 +}
 +
-+void zmk_display_notify_for_ms(const char *line1, const char *line2, uint32_t timeout_ms) {
++void zmk_display_notify_for_ms(const char *line1, const char *line2, uint32_t timeout_ms,
++                               bool flash) {
 +    snprintf(notification_line1, sizeof(notification_line1), "%s", line1);
 +    snprintf(notification_line2, sizeof(notification_line2), "%s", line2);
 +    notification_timeout_ms = timeout_ms;
++    notification_flash = flash;
 +    k_work_submit_to_queue(zmk_display_work_q(), &show_raw_notification_work);
 +}
 +
@@ -532,14 +600,14 @@ index a86bfad..564e5b5 100644
 +
 +    switch (display_power_mode) {
 +    case ZMK_DISPLAY_POWER_MODE_ON:
-+        zmk_display_notify_for_ms("DISPLAY MODE", "ON", 2000);
++        zmk_display_notify_for_ms("DISPLAY MODE", "ON", 2000, false);
 +        break;
 +    case ZMK_DISPLAY_POWER_MODE_OFF:
-+        zmk_display_notify_for_ms("DISPLAY MODE", "OFF", 2000);
++        zmk_display_notify_for_ms("DISPLAY MODE", "OFF", 2000, false);
 +        break;
 +    case ZMK_DISPLAY_POWER_MODE_OPTIMAL:
 +    default:
-+        zmk_display_notify_for_ms("DISPLAY MODE", "OPTIMAL", 2500);
++        zmk_display_notify_for_ms("DISPLAY MODE", "OPTIMAL", 2500, false);
 +        break;
 +    }
 +}
@@ -569,7 +637,7 @@ index a86bfad..564e5b5 100644
  #if IS_ENABLED(CONFIG_ZMK_DISPLAY_BLANK_ON_IDLE)
  
  void blank_display_cb(struct k_work *work) {
-@@ -104,7 +462,7 @@ static void stop_display_updates() {
+@@ -104,7 +517,7 @@ static void stop_display_updates() {
  
  #endif
  
@@ -578,7 +646,7 @@ index a86bfad..564e5b5 100644
  
  static void initialize_theme() {
  #if IS_ENABLED(CONFIG_LV_USE_THEME_MONO)
-@@ -138,7 +496,7 @@ void initialize_display(struct k_work *work) {
+@@ -138,7 +551,7 @@ void initialize_display(struct k_work *work) {
  
      lv_scr_load(screen);
  
@@ -587,7 +655,7 @@ index a86bfad..564e5b5 100644
  }
  
  K_WORK_DEFINE(init_work, initialize_display);
-@@ -174,9 +532,16 @@ int display_event_handler(const zmk_event_t *eh) {
+@@ -174,9 +587,16 @@ int display_event_handler(const zmk_event_t *eh) {
  
      switch (ev->state) {
      case ZMK_ACTIVITY_ACTIVE:
@@ -605,7 +673,7 @@ index a86bfad..564e5b5 100644
      case ZMK_ACTIVITY_SLEEP:
          stop_display_updates();
          break;
-@@ -190,4 +555,48 @@ int display_event_handler(const zmk_event_t *eh) {
+@@ -190,4 +610,66 @@ int display_event_handler(const zmk_event_t *eh) {
  ZMK_LISTENER(display, display_event_handler);
  ZMK_SUBSCRIPTION(display, zmk_activity_state_changed);
  
@@ -613,14 +681,32 @@ index a86bfad..564e5b5 100644
 +#if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
 +    const struct zmk_battery_state_changed *battery_ev = as_zmk_battery_state_changed(eh);
 +    if (battery_ev != NULL) {
-+        if (display_power_mode == ZMK_DISPLAY_POWER_MODE_OPTIMAL && battery_ev->state_of_charge <= 20 && !low_battery_alerted) {
++        uint8_t soc = battery_ev->state_of_charge;
++        char percentage[12];
++        snprintf(percentage, sizeof(percentage), "%u%%", soc);
++
++        if (soc <= 5 && !critical_battery_alerted) {
++            critical_battery_alerted = true;
++            snprintf(percentage, sizeof(percentage), "CRITICAL %u%%", soc);
++            zmk_display_notify_for_ms("!!! BATTERY !!!", percentage, 30000, true);
++        } else if (soc <= 10 && !extreme_battery_alerted) {
++            extreme_battery_alerted = true;
++            zmk_display_notify_for_ms("EXTREMELY LOW", percentage, 10000, false);
++        } else if (soc <= 20 && !low_battery_alerted) {
 +            low_battery_alerted = true;
-+            char percentage[8];
-+            snprintf(percentage, sizeof(percentage), "%u%%", battery_ev->state_of_charge);
-+            zmk_display_notify_for_ms("BATTERY LOW", percentage, 5000);
-+        } else if (battery_ev->state_of_charge > 25) {
++            zmk_display_notify_for_ms("BATTERY LOW", percentage, 5000, false);
++        }
++
++        if (soc > 25) {
 +            low_battery_alerted = false;
 +        }
++        if (soc > 15) {
++            extreme_battery_alerted = false;
++        }
++        if (soc > 8) {
++            critical_battery_alerted = false;
++        }
++
 +        return ZMK_EV_EVENT_BUBBLE;
 +    }
 +#endif
