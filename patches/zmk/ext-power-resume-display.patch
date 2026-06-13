@@ -18,10 +18,10 @@ index d206d35..d33c7ca 100644
  /**
   * @brief Macro to define a ZMK event listener that handles the thread safety of fetching
 diff --git a/app/src/display/main.c b/app/src/display/main.c
-index a86bfad..366bb28 100644
+index a86bfad..3ce593b 100644
 --- a/app/src/display/main.c
 +++ b/app/src/display/main.c
-@@ -16,10 +16,17 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
+@@ -16,10 +16,19 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
  #include <zephyr/drivers/led.h>
  #include <lvgl.h>
  
@@ -32,14 +32,16 @@ index a86bfad..366bb28 100644
  #include <zmk/event_manager.h>
  #include <zmk/events/activity_state_changed.h>
 +#include <zmk/events/battery_state_changed.h>
++#if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 +#include <zmk/events/endpoint_changed.h>
 +#if defined(CONFIG_ZMK_BLE)
 +#include <zmk/events/ble_active_profile_changed.h>
 +#endif
++#endif
  #include <zmk/display/status_screen.h>
  
  static const struct device *display = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
-@@ -61,7 +68,12 @@ void display_timer_cb() { k_work_submit_to_queue(zmk_display_work_q(), &display_
+@@ -61,7 +70,12 @@ void display_timer_cb() { k_work_submit_to_queue(zmk_display_work_q(), &display_
  
  K_TIMER_DEFINE(display_timer, display_timer_cb, NULL);
  
@@ -53,7 +55,7 @@ index a86bfad..366bb28 100644
  #if DT_HAS_CHOSEN(zmk_display_led)
      led_on(display_led, display_led_idx);
  #endif
-@@ -72,6 +84,67 @@ void unblank_display_cb(struct k_work *work) {
+@@ -72,6 +86,67 @@ void unblank_display_cb(struct k_work *work) {
  #endif // !IS_ENABLED(CONFIG_ARCH_POSIX)
  }
  
@@ -121,7 +123,7 @@ index a86bfad..366bb28 100644
  #if IS_ENABLED(CONFIG_ZMK_DISPLAY_BLANK_ON_IDLE)
  
  void blank_display_cb(struct k_work *work) {
-@@ -138,7 +211,7 @@ void initialize_display(struct k_work *work) {
+@@ -138,7 +213,7 @@ void initialize_display(struct k_work *work) {
  
      lv_scr_load(screen);
  
@@ -130,7 +132,7 @@ index a86bfad..366bb28 100644
  }
  
  K_WORK_DEFINE(init_work, initialize_display);
-@@ -174,9 +247,9 @@ int display_event_handler(const zmk_event_t *eh) {
+@@ -174,9 +249,9 @@ int display_event_handler(const zmk_event_t *eh) {
  
      switch (ev->state) {
      case ZMK_ACTIVITY_ACTIVE:
@@ -142,7 +144,7 @@ index a86bfad..366bb28 100644
      case ZMK_ACTIVITY_SLEEP:
          stop_display_updates();
          break;
-@@ -190,4 +263,38 @@ int display_event_handler(const zmk_event_t *eh) {
+@@ -190,4 +265,42 @@ int display_event_handler(const zmk_event_t *eh) {
  ZMK_LISTENER(display, display_event_handler);
  ZMK_SUBSCRIPTION(display, zmk_activity_state_changed);
  
@@ -158,6 +160,7 @@ index a86bfad..366bb28 100644
 +        return ZMK_EV_EVENT_BUBBLE;
 +    }
 +
++#if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 +    if (as_zmk_endpoint_changed(eh) != NULL) {
 +        zmk_display_show_for_ms(10000);
 +        return ZMK_EV_EVENT_BUBBLE;
@@ -169,15 +172,18 @@ index a86bfad..366bb28 100644
 +        return ZMK_EV_EVENT_BUBBLE;
 +    }
 +#endif
++#endif
 +
 +    return ZMK_EV_EVENT_BUBBLE;
 +}
 +
 +ZMK_LISTENER(display_policy, display_policy_event_handler);
 +ZMK_SUBSCRIPTION(display_policy, zmk_battery_state_changed);
++#if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 +ZMK_SUBSCRIPTION(display_policy, zmk_endpoint_changed);
 +#if defined(CONFIG_ZMK_BLE)
 +ZMK_SUBSCRIPTION(display_policy, zmk_ble_active_profile_changed);
++#endif
 +#endif
 +
  #endif /* IS_ENABLED(CONFIG_ZMK_DISPLAY_BLANK_ON_IDLE) */
