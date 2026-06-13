@@ -10,6 +10,20 @@ index c41153c..b885de0 100644
  target_sources_ifdef(CONFIG_ZMK_BEHAVIOR_SOFT_OFF app PRIVATE src/behaviors/behavior_soft_off.c)
  add_subdirectory_ifdef(CONFIG_ZMK_POINTING src/pointing/)
  if ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+diff --git a/app/dts/bindings/behaviors/zmk,behavior-display-power.yaml b/app/dts/bindings/behaviors/zmk,behavior-display-power.yaml
+new file mode 100644
+index 0000000..febad21
+--- /dev/null
++++ b/app/dts/bindings/behaviors/zmk,behavior-display-power.yaml
+@@ -0,0 +1,8 @@
++# Copyright (c) 2026 The ZMK Contributors
++# SPDX-License-Identifier: MIT
++
++description: Display/external rail power behavior
++
++compatible: "zmk,behavior-display-power"
++
++include: one_param.yaml
 diff --git a/app/include/dt-bindings/zmk/display_power.h b/app/include/dt-bindings/zmk/display_power.h
 new file mode 100644
 index 0000000..87744e2
