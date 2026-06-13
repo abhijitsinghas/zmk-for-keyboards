@@ -571,42 +571,92 @@ index a86bfad..8595fa3 100644
 +#endif
 +
  #endif /* IS_ENABLED(CONFIG_ZMK_DISPLAY_BLANK_ON_IDLE) */
+diff --git a/app/src/display/widgets/battery_status.c b/app/src/display/widgets/battery_status.c
+index 22e73fa..b6f6225 100644
+--- a/app/src/display/widgets/battery_status.c
++++ b/app/src/display/widgets/battery_status.c
+@@ -27,7 +27,7 @@ struct battery_status_state {
+ };
+ 
+ static void set_battery_symbol(lv_obj_t *label, struct battery_status_state state) {
+-    char text[9] = {};
++    char text[16] = {};
+ 
+     uint8_t level = state.level;
+ 
+@@ -55,6 +55,7 @@ static void set_battery_symbol(lv_obj_t *label, struct battery_status_state stat
+     }
+ #endif
+     lv_label_set_text(label, text);
++    lv_obj_align(label, LV_ALIGN_TOP_RIGHT, 0, 0);
+ }
+ 
+ void battery_status_update_cb(struct battery_status_state state) {
+diff --git a/app/src/display/widgets/layer_status.c b/app/src/display/widgets/layer_status.c
+index 64cb7c3..a07f08d 100644
+--- a/app/src/display/widgets/layer_status.c
++++ b/app/src/display/widgets/layer_status.c
+@@ -24,17 +24,19 @@ struct layer_status_state {
+ 
+ static void set_layer_symbol(lv_obj_t *label, struct layer_status_state state) {
+     if (state.label == NULL || strlen(state.label) == 0) {
+-        char text[8] = {};
++        char text[16] = {};
+ 
+         snprintf(text, sizeof(text), LV_SYMBOL_KEYBOARD " %i", state.index);
+ 
+         lv_label_set_text(label, text);
++        lv_obj_align(label, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+     } else {
+-        char text[14] = {};
++        char text[32] = {};
+ 
+         snprintf(text, sizeof(text), LV_SYMBOL_KEYBOARD " %s", state.label);
+ 
+         lv_label_set_text(label, text);
++        lv_obj_align(label, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+     }
+ }
+ 
 diff --git a/app/src/display/widgets/output_status.c b/app/src/display/widgets/output_status.c
-index 189a7dc..6d04f40 100644
+index 189a7dc..5a98c16 100644
 --- a/app/src/display/widgets/output_status.c
 +++ b/app/src/display/widgets/output_status.c
-@@ -62,14 +62,14 @@ static void set_status_symbol(lv_obj_t *label, struct output_status_state state)
-     case ZMK_TRANSPORT_BLE:
-         if (state.active_profile_bonded) {
-             if (state.active_profile_connected) {
--                snprintf(text, sizeof(text), LV_SYMBOL_WIFI " %i " LV_SYMBOL_OK,
-+                snprintf(text, sizeof(text), LV_SYMBOL_BLUETOOTH " %i " LV_SYMBOL_OK,
-                          state.selected_endpoint.ble.profile_index + 1);
-             } else {
--                snprintf(text, sizeof(text), LV_SYMBOL_WIFI " %i " LV_SYMBOL_CLOSE,
-+                snprintf(text, sizeof(text), LV_SYMBOL_BLUETOOTH " %i " LV_SYMBOL_CLOSE,
-                          state.selected_endpoint.ble.profile_index + 1);
-             }
-         } else {
--            snprintf(text, sizeof(text), LV_SYMBOL_WIFI " %i " LV_SYMBOL_SETTINGS,
-+            snprintf(text, sizeof(text), LV_SYMBOL_BLUETOOTH " %i " LV_SYMBOL_SETTINGS,
-                      state.selected_endpoint.ble.profile_index + 1);
-         }
-         break;
+@@ -37,7 +37,7 @@ static struct output_status_state get_state(const zmk_event_t *_eh) {
+ }
+ 
+ static void set_status_symbol(lv_obj_t *label, struct output_status_state state) {
+-    char text[20] = {};
++    char text[32] = {};
+ 
+     enum zmk_transport transport = state.selected_endpoint.transport;
+     bool connected = transport != ZMK_TRANSPORT_NONE;
+@@ -76,6 +76,7 @@ static void set_status_symbol(lv_obj_t *label, struct output_status_state state)
+     }
+ 
+     lv_label_set_text(label, text);
++    lv_obj_align(label, LV_ALIGN_TOP_LEFT, 0, 0);
+ }
+ 
+ static void output_status_update_cb(struct output_status_state state) {
 diff --git a/app/src/display/widgets/peripheral_status.c b/app/src/display/widgets/peripheral_status.c
-index fdfe4d9..ba85ed2 100644
+index fdfe4d9..b6ce92c 100644
 --- a/app/src/display/widgets/peripheral_status.c
 +++ b/app/src/display/widgets/peripheral_status.c
-@@ -27,7 +27,8 @@ static struct peripheral_status_state get_state(const zmk_event_t *_eh) {
+@@ -27,10 +27,12 @@ static struct peripheral_status_state get_state(const zmk_event_t *_eh) {
  
  static void set_status_symbol(lv_obj_t *label, struct peripheral_status_state state) {
      const char *text =
 -        state.connected ? (LV_SYMBOL_WIFI " " LV_SYMBOL_OK) : (LV_SYMBOL_WIFI " " LV_SYMBOL_CLOSE);
-+        state.connected ? (LV_SYMBOL_BLUETOOTH " " LV_SYMBOL_OK)
-+                        : (LV_SYMBOL_BLUETOOTH " " LV_SYMBOL_CLOSE);
++        state.connected ? (LV_SYMBOL_WIFI " " LV_SYMBOL_OK)
++                        : (LV_SYMBOL_WIFI " " LV_SYMBOL_CLOSE);
  
      LOG_DBG("connected? %s", state.connected ? "true" : "false");
      lv_label_set_text(label, text);
++    lv_obj_align(label, LV_ALIGN_TOP_LEFT, 0, 0);
+ }
+ 
+ static void output_status_update_cb(struct peripheral_status_state state) {
 diff --git a/app/src/ext_power_generic.c b/app/src/ext_power_generic.c
 index 3975e03..ad0fd0a 100644
 --- a/app/src/ext_power_generic.c
