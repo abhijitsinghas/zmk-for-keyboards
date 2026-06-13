@@ -104,8 +104,7 @@ jobs:
           set -eux
           git -C zephyr checkout -- drivers/display/ssd1306.c
           git -C zmk checkout -- app/src/ext_power_generic.c
-          patch -p1 -d zephyr < "${GITHUB_WORKSPACE}/patches/zephyr/ssd1306-reinit-on-resume.patch"
-          patch -p1 -d zmk < "${GITHUB_WORKSPACE}/patches/zmk/ext-power-resume-display.patch"
+          python3 "${GITHUB_WORKSPACE}/scripts/apply-oled-ext-power-patches.py"
 
       - name: West Zephyr export
         working-directory: ${{ env.base_dir }}
