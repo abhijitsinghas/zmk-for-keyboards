@@ -163,7 +163,7 @@ index 0000000..5ede2a8
 +
 +#endif /* DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT) */
 diff --git a/app/src/display/main.c b/app/src/display/main.c
-index a86bfad..48ac96d 100644
+index a86bfad..7cea060 100644
 --- a/app/src/display/main.c
 +++ b/app/src/display/main.c
 @@ -4,6 +4,8 @@
@@ -202,7 +202,7 @@ index a86bfad..48ac96d 100644
  static bool initialized = false;
  
  static lv_obj_t *screen;
-+static lv_obj_t *notification_panel;
++static lv_obj_t *notification_screen;
 +static lv_obj_t *notification_label;
 +static char notification_text[64];
 +static uint32_t notification_timeout_ms;
@@ -231,7 +231,7 @@ index a86bfad..48ac96d 100644
  #if DT_HAS_CHOSEN(zmk_display_led)
      led_on(display_led, display_led_idx);
  #endif
-@@ -72,6 +103,225 @@ void unblank_display_cb(struct k_work *work) {
+@@ -72,6 +103,220 @@ void unblank_display_cb(struct k_work *work) {
  #endif // !IS_ENABLED(CONFIG_ARCH_POSIX)
  }
  
@@ -286,36 +286,29 @@ index a86bfad..48ac96d 100644
 +K_WORK_DELAYABLE_DEFINE(clear_notification_work, clear_notification_cb);
 +
 +static void ensure_notification_label(void) {
-+    if (screen == NULL || notification_panel != NULL) {
++    if (screen == NULL || notification_screen != NULL) {
 +        return;
 +    }
 +
-+    notification_panel = lv_obj_create(screen);
-+    lv_obj_remove_style_all(notification_panel);
-+    lv_obj_set_size(notification_panel, LV_PCT(100), LV_PCT(100));
-+    lv_obj_set_style_bg_opa(notification_panel, LV_OPA_COVER, LV_PART_MAIN);
-+    lv_obj_set_style_bg_color(notification_panel, lv_color_black(), LV_PART_MAIN);
-+    lv_obj_align(notification_panel, LV_ALIGN_CENTER, 0, 0);
-+    lv_obj_add_flag(notification_panel, LV_OBJ_FLAG_HIDDEN);
-+
-+    notification_label = lv_label_create(notification_panel);
++    notification_screen = lv_obj_create(NULL);
++    notification_label = lv_label_create(notification_screen);
 +    lv_obj_set_style_text_align(notification_label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-+    lv_obj_set_style_text_font(notification_label, lv_theme_get_font_small(screen), LV_PART_MAIN);
-+    lv_obj_set_style_text_color(notification_label, lv_color_white(), LV_PART_MAIN);
++    lv_obj_set_style_text_font(notification_label, lv_theme_get_font_small(notification_screen),
++                               LV_PART_MAIN);
 +    lv_label_set_text(notification_label, "");
 +    lv_obj_align(notification_label, LV_ALIGN_CENTER, 0, 0);
 +}
 +
 +static void flash_notification_cb(struct k_work *work) {
-+    if (!notification_flash || notification_panel == NULL) {
++    if (!notification_flash || notification_label == NULL) {
 +        return;
 +    }
 +
 +    notification_visible = !notification_visible;
 +    if (notification_visible) {
-+        lv_obj_clear_flag(notification_panel, LV_OBJ_FLAG_HIDDEN);
++        lv_obj_clear_flag(notification_label, LV_OBJ_FLAG_HIDDEN);
 +    } else {
-+        lv_obj_add_flag(notification_panel, LV_OBJ_FLAG_HIDDEN);
++        lv_obj_add_flag(notification_label, LV_OBJ_FLAG_HIDDEN);
 +    }
 +
 +    lv_task_handler();
@@ -326,8 +319,9 @@ index a86bfad..48ac96d 100644
 +    notification_flash = false;
 +    k_work_cancel_delayable(&flash_notification_work);
 +
-+    if (notification_panel != NULL) {
-+        lv_obj_add_flag(notification_panel, LV_OBJ_FLAG_HIDDEN);
++    if (screen != NULL) {
++        lv_scr_load(screen);
++        lv_obj_invalidate(screen);
 +        lv_task_handler();
 +    }
 +
@@ -346,7 +340,7 @@ index a86bfad..48ac96d 100644
 +    force_refresh_display_cb(work);
 +    ensure_notification_label();
 +
-+    if (notification_panel == NULL || notification_label == NULL) {
++    if (notification_screen == NULL || notification_label == NULL) {
 +        return;
 +    }
 +
@@ -356,9 +350,10 @@ index a86bfad..48ac96d 100644
 +
 +    lv_label_set_text(notification_label, notification_text);
 +    lv_obj_align(notification_label, LV_ALIGN_CENTER, 0, 0);
-+    lv_obj_move_foreground(notification_panel);
 +    notification_visible = true;
-+    lv_obj_clear_flag(notification_panel, LV_OBJ_FLAG_HIDDEN);
++    lv_obj_clear_flag(notification_label, LV_OBJ_FLAG_HIDDEN);
++    lv_scr_load(notification_screen);
++    lv_obj_invalidate(notification_screen);
 +    lv_task_handler();
 +
 +    if (notification_flash) {
@@ -457,7 +452,7 @@ index a86bfad..48ac96d 100644
  #if IS_ENABLED(CONFIG_ZMK_DISPLAY_BLANK_ON_IDLE)
  
  void blank_display_cb(struct k_work *work) {
-@@ -104,7 +354,7 @@ static void stop_display_updates() {
+@@ -104,7 +349,7 @@ static void stop_display_updates() {
  
  #endif
  
@@ -466,7 +461,7 @@ index a86bfad..48ac96d 100644
  
  static void initialize_theme() {
  #if IS_ENABLED(CONFIG_LV_USE_THEME_MONO)
-@@ -137,8 +387,9 @@ void initialize_display(struct k_work *work) {
+@@ -137,8 +382,9 @@ void initialize_display(struct k_work *work) {
      }
  
      lv_scr_load(screen);
@@ -477,7 +472,7 @@ index a86bfad..48ac96d 100644
  }
  
  K_WORK_DEFINE(init_work, initialize_display);
-@@ -174,9 +425,16 @@ int display_event_handler(const zmk_event_t *eh) {
+@@ -174,9 +420,16 @@ int display_event_handler(const zmk_event_t *eh) {
  
      switch (ev->state) {
      case ZMK_ACTIVITY_ACTIVE:
@@ -495,7 +490,7 @@ index a86bfad..48ac96d 100644
      case ZMK_ACTIVITY_SLEEP:
          stop_display_updates();
          break;
-@@ -190,4 +448,66 @@ int display_event_handler(const zmk_event_t *eh) {
+@@ -190,4 +443,66 @@ int display_event_handler(const zmk_event_t *eh) {
  ZMK_LISTENER(display, display_event_handler);
  ZMK_SUBSCRIPTION(display, zmk_activity_state_changed);
  
@@ -563,7 +558,7 @@ index a86bfad..48ac96d 100644
 +
  #endif /* IS_ENABLED(CONFIG_ZMK_DISPLAY_BLANK_ON_IDLE) */
 diff --git a/app/src/display/widgets/output_status.c b/app/src/display/widgets/output_status.c
-index 189a7dc..6d04f40 100644
+index 189a7dc..e0e2b3c 100644
 --- a/app/src/display/widgets/output_status.c
 +++ b/app/src/display/widgets/output_status.c
 @@ -62,14 +62,14 @@ static void set_status_symbol(lv_obj_t *label, struct output_status_state state)
@@ -571,16 +566,16 @@ index 189a7dc..6d04f40 100644
          if (state.active_profile_bonded) {
              if (state.active_profile_connected) {
 -                snprintf(text, sizeof(text), LV_SYMBOL_WIFI " %i " LV_SYMBOL_OK,
-+                snprintf(text, sizeof(text), LV_SYMBOL_BLUETOOTH " %i " LV_SYMBOL_OK,
++                snprintf(text, sizeof(text), "BLE %i " LV_SYMBOL_OK,
                           state.selected_endpoint.ble.profile_index + 1);
              } else {
 -                snprintf(text, sizeof(text), LV_SYMBOL_WIFI " %i " LV_SYMBOL_CLOSE,
-+                snprintf(text, sizeof(text), LV_SYMBOL_BLUETOOTH " %i " LV_SYMBOL_CLOSE,
++                snprintf(text, sizeof(text), "BLE %i " LV_SYMBOL_CLOSE,
                           state.selected_endpoint.ble.profile_index + 1);
              }
          } else {
 -            snprintf(text, sizeof(text), LV_SYMBOL_WIFI " %i " LV_SYMBOL_SETTINGS,
-+            snprintf(text, sizeof(text), LV_SYMBOL_BLUETOOTH " %i " LV_SYMBOL_SETTINGS,
++            snprintf(text, sizeof(text), "BLE %i " LV_SYMBOL_SETTINGS,
                       state.selected_endpoint.ble.profile_index + 1);
          }
          break;
