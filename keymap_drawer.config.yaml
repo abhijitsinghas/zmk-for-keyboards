@@ -6,6 +6,7 @@ parse_config:
     "&bootloader": "BOOT"
     "&sys_reset": "RESET"
     "&display_power DISPLAY_POWER_INFO_CMD": "INFO"
+    "&display_power DISPLAY_POWER_CYCLE_CMD": "DISP"
     "&mmv MOVE_UP": "M↑"
     "&mmv MOVE_DOWN": "M↓"
     "&mmv MOVE_LEFT": "M←"
