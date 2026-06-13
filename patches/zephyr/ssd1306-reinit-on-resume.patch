@@ -1,6 +1,12 @@
 --- a/drivers/display/ssd1306.c
 +++ b/drivers/display/ssd1306.c
-@@ -229,6 +229,11 @@
+@@ -225,10 +225,17 @@
+ 	return ret;
+ }
+ 
++static int ssd1306_set_contrast(const struct device *dev, const uint8_t contrast);
++
+ static int ssd1306_resume(const struct device *dev)
  {
  	const struct ssd1306_config *config = dev->config;
  	uint8_t cmd_buf[] = {
@@ -12,7 +18,7 @@
  		SSD1306_DISPLAY_ON,
  	};
  
-@@ -238,7 +243,51 @@
+@@ -238,7 +245,51 @@
  		k_sleep(K_MSEC(SSD1306_SUPPLY_DELAY));
  	}
  

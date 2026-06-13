@@ -41,7 +41,9 @@ ssd1306_old = '''static int ssd1306_resume(const struct device *dev)
 }
 '''
 
-ssd1306_new = '''static int ssd1306_resume(const struct device *dev)
+ssd1306_new = '''static int ssd1306_set_contrast(const struct device *dev, const uint8_t contrast);
+
+static int ssd1306_resume(const struct device *dev)
 {
 	const struct ssd1306_config *config = dev->config;
 	uint8_t cmd_buf[] = {
@@ -65,8 +67,8 @@ ssd1306_new = '''static int ssd1306_resume(const struct device *dev)
 	 * DISPLAY_ON command is not enough to bring the panel back. Re-send
 	 * the software init sequence without toggling the hardware reset pin.
 	 */
-#if (DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(solomon_ssd1306fb, i2c) || \
-	DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(solomon_ssd1309fb, i2c) || \
+#if (DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(solomon_ssd1306fb, i2c) || \\
+	DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(solomon_ssd1309fb, i2c) || \\
 	DT_HAS_COMPAT_ON_BUS_STATUS_OKAY(sinowealth_sh1106, i2c))
 	if (config->write_bus == ssd1306_write_bus_i2c) {
 		(void)i2c_recover_bus(config->bus.i2c.bus);
