@@ -28,7 +28,7 @@ static const struct layer_rgb_color layer_colors[] = {
     {210, 100, 30}, /* 123: blue */
     {280, 100, 30}, /* {}: purple */
     {120, 100, 30}, /* PTR: green */
-    {35, 100, 30},  /* CFG: amber/orange */
+    {15, 100, 30},  /* CFG: red-orange */
 };
 
 static void invoke_peripheral_rgb(uint8_t source, uint32_t command, uint32_t value) {
