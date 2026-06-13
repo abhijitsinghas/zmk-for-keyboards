@@ -562,6 +562,42 @@ index a86bfad..c4d7d22 100644
 +#endif
 +
  #endif /* IS_ENABLED(CONFIG_ZMK_DISPLAY_BLANK_ON_IDLE) */
+diff --git a/app/src/display/status_screen.c b/app/src/display/status_screen.c
+index 58de09a..4c853d0 100644
+--- a/app/src/display/status_screen.c
++++ b/app/src/display/status_screen.c
+@@ -40,16 +40,22 @@ lv_obj_t *zmk_display_status_screen() {
+ 
+ #if IS_ENABLED(CONFIG_ZMK_WIDGET_BATTERY_STATUS)
+     zmk_widget_battery_status_init(&battery_status_widget, screen);
++    lv_obj_set_style_text_font(zmk_widget_battery_status_obj(&battery_status_widget),
++                               LV_FONT_DEFAULT, LV_PART_MAIN);
+     lv_obj_align(zmk_widget_battery_status_obj(&battery_status_widget), LV_ALIGN_TOP_RIGHT, 0, 0);
+ #endif
+ 
+ #if IS_ENABLED(CONFIG_ZMK_WIDGET_OUTPUT_STATUS)
+     zmk_widget_output_status_init(&output_status_widget, screen);
++    lv_obj_set_style_text_font(zmk_widget_output_status_obj(&output_status_widget),
++                               LV_FONT_DEFAULT, LV_PART_MAIN);
+     lv_obj_align(zmk_widget_output_status_obj(&output_status_widget), LV_ALIGN_TOP_LEFT, 0, 0);
+ #endif
+ 
+ #if IS_ENABLED(CONFIG_ZMK_WIDGET_PERIPHERAL_STATUS)
+     zmk_widget_peripheral_status_init(&peripheral_status_widget, screen);
++    lv_obj_set_style_text_font(zmk_widget_peripheral_status_obj(&peripheral_status_widget),
++                               LV_FONT_DEFAULT, LV_PART_MAIN);
+     lv_obj_align(zmk_widget_peripheral_status_obj(&peripheral_status_widget), LV_ALIGN_TOP_LEFT, 0,
+                  0);
+ #endif
+@@ -57,7 +63,7 @@ lv_obj_t *zmk_display_status_screen() {
+ #if IS_ENABLED(CONFIG_ZMK_WIDGET_LAYER_STATUS)
+     zmk_widget_layer_status_init(&layer_status_widget, screen);
+     lv_obj_set_style_text_font(zmk_widget_layer_status_obj(&layer_status_widget),
+-                               lv_theme_get_font_small(screen), LV_PART_MAIN);
++                               LV_FONT_DEFAULT, LV_PART_MAIN);
+     lv_obj_align(zmk_widget_layer_status_obj(&layer_status_widget), LV_ALIGN_BOTTOM_LEFT, 0, 0);
+ #endif
+ 
 diff --git a/app/src/display/widgets/battery_status.c b/app/src/display/widgets/battery_status.c
 index 22e73fa..26b2e3a 100644
 --- a/app/src/display/widgets/battery_status.c
