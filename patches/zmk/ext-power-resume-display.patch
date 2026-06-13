@@ -163,7 +163,7 @@ index 0000000..5ede2a8
 +
 +#endif /* DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT) */
 diff --git a/app/src/display/main.c b/app/src/display/main.c
-index a86bfad..1887f4b 100644
+index a86bfad..48ac96d 100644
 --- a/app/src/display/main.c
 +++ b/app/src/display/main.c
 @@ -4,6 +4,8 @@
@@ -198,10 +198,11 @@ index a86bfad..1887f4b 100644
  #include <zmk/display/status_screen.h>
  
  static const struct device *display = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
-@@ -34,6 +48,11 @@ static const uint8_t display_led_idx = DT_NODE_CHILD_IDX(DT_CHOSEN(zmk_display_l
+@@ -34,6 +48,12 @@ static const uint8_t display_led_idx = DT_NODE_CHILD_IDX(DT_CHOSEN(zmk_display_l
  static bool initialized = false;
  
  static lv_obj_t *screen;
++static lv_obj_t *notification_panel;
 +static lv_obj_t *notification_label;
 +static char notification_text[64];
 +static uint32_t notification_timeout_ms;
@@ -210,7 +211,7 @@ index a86bfad..1887f4b 100644
  
  __attribute__((weak)) lv_obj_t *zmk_display_status_screen() { return NULL; }
  
-@@ -61,7 +80,18 @@ void display_timer_cb() { k_work_submit_to_queue(zmk_display_work_q(), &display_
+@@ -61,7 +81,18 @@ void display_timer_cb() { k_work_submit_to_queue(zmk_display_work_q(), &display_
  
  K_TIMER_DEFINE(display_timer, display_timer_cb, NULL);
  
@@ -230,7 +231,7 @@ index a86bfad..1887f4b 100644
  #if DT_HAS_CHOSEN(zmk_display_led)
      led_on(display_led, display_led_idx);
  #endif
-@@ -72,6 +102,217 @@ void unblank_display_cb(struct k_work *work) {
+@@ -72,6 +103,225 @@ void unblank_display_cb(struct k_work *work) {
  #endif // !IS_ENABLED(CONFIG_ARCH_POSIX)
  }
  
@@ -285,28 +286,36 @@ index a86bfad..1887f4b 100644
 +K_WORK_DELAYABLE_DEFINE(clear_notification_work, clear_notification_cb);
 +
 +static void ensure_notification_label(void) {
-+    if (screen == NULL || notification_label != NULL) {
++    if (screen == NULL || notification_panel != NULL) {
 +        return;
 +    }
 +
-+    notification_label = lv_label_create(screen);
++    notification_panel = lv_obj_create(screen);
++    lv_obj_remove_style_all(notification_panel);
++    lv_obj_set_size(notification_panel, LV_PCT(100), LV_PCT(100));
++    lv_obj_set_style_bg_opa(notification_panel, LV_OPA_COVER, LV_PART_MAIN);
++    lv_obj_set_style_bg_color(notification_panel, lv_color_black(), LV_PART_MAIN);
++    lv_obj_align(notification_panel, LV_ALIGN_CENTER, 0, 0);
++    lv_obj_add_flag(notification_panel, LV_OBJ_FLAG_HIDDEN);
++
++    notification_label = lv_label_create(notification_panel);
 +    lv_obj_set_style_text_align(notification_label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 +    lv_obj_set_style_text_font(notification_label, lv_theme_get_font_small(screen), LV_PART_MAIN);
++    lv_obj_set_style_text_color(notification_label, lv_color_white(), LV_PART_MAIN);
 +    lv_label_set_text(notification_label, "");
 +    lv_obj_align(notification_label, LV_ALIGN_CENTER, 0, 0);
-+    lv_obj_add_flag(notification_label, LV_OBJ_FLAG_HIDDEN);
 +}
 +
 +static void flash_notification_cb(struct k_work *work) {
-+    if (!notification_flash || notification_label == NULL) {
++    if (!notification_flash || notification_panel == NULL) {
 +        return;
 +    }
 +
 +    notification_visible = !notification_visible;
 +    if (notification_visible) {
-+        lv_obj_clear_flag(notification_label, LV_OBJ_FLAG_HIDDEN);
++        lv_obj_clear_flag(notification_panel, LV_OBJ_FLAG_HIDDEN);
 +    } else {
-+        lv_obj_add_flag(notification_label, LV_OBJ_FLAG_HIDDEN);
++        lv_obj_add_flag(notification_panel, LV_OBJ_FLAG_HIDDEN);
 +    }
 +
 +    lv_task_handler();
@@ -317,8 +326,8 @@ index a86bfad..1887f4b 100644
 +    notification_flash = false;
 +    k_work_cancel_delayable(&flash_notification_work);
 +
-+    if (notification_label != NULL) {
-+        lv_obj_add_flag(notification_label, LV_OBJ_FLAG_HIDDEN);
++    if (notification_panel != NULL) {
++        lv_obj_add_flag(notification_panel, LV_OBJ_FLAG_HIDDEN);
 +        lv_task_handler();
 +    }
 +
@@ -337,7 +346,7 @@ index a86bfad..1887f4b 100644
 +    force_refresh_display_cb(work);
 +    ensure_notification_label();
 +
-+    if (notification_label == NULL) {
++    if (notification_panel == NULL || notification_label == NULL) {
 +        return;
 +    }
 +
@@ -347,9 +356,9 @@ index a86bfad..1887f4b 100644
 +
 +    lv_label_set_text(notification_label, notification_text);
 +    lv_obj_align(notification_label, LV_ALIGN_CENTER, 0, 0);
-+    lv_obj_move_foreground(notification_label);
++    lv_obj_move_foreground(notification_panel);
 +    notification_visible = true;
-+    lv_obj_clear_flag(notification_label, LV_OBJ_FLAG_HIDDEN);
++    lv_obj_clear_flag(notification_panel, LV_OBJ_FLAG_HIDDEN);
 +    lv_task_handler();
 +
 +    if (notification_flash) {
@@ -448,7 +457,7 @@ index a86bfad..1887f4b 100644
  #if IS_ENABLED(CONFIG_ZMK_DISPLAY_BLANK_ON_IDLE)
  
  void blank_display_cb(struct k_work *work) {
-@@ -104,7 +345,7 @@ static void stop_display_updates() {
+@@ -104,7 +354,7 @@ static void stop_display_updates() {
  
  #endif
  
@@ -457,7 +466,7 @@ index a86bfad..1887f4b 100644
  
  static void initialize_theme() {
  #if IS_ENABLED(CONFIG_LV_USE_THEME_MONO)
-@@ -137,8 +378,9 @@ void initialize_display(struct k_work *work) {
+@@ -137,8 +387,9 @@ void initialize_display(struct k_work *work) {
      }
  
      lv_scr_load(screen);
@@ -468,7 +477,7 @@ index a86bfad..1887f4b 100644
  }
  
  K_WORK_DEFINE(init_work, initialize_display);
-@@ -174,9 +416,16 @@ int display_event_handler(const zmk_event_t *eh) {
+@@ -174,9 +425,16 @@ int display_event_handler(const zmk_event_t *eh) {
  
      switch (ev->state) {
      case ZMK_ACTIVITY_ACTIVE:
@@ -486,7 +495,7 @@ index a86bfad..1887f4b 100644
      case ZMK_ACTIVITY_SLEEP:
          stop_display_updates();
          break;
-@@ -190,4 +439,66 @@ int display_event_handler(const zmk_event_t *eh) {
+@@ -190,4 +448,66 @@ int display_event_handler(const zmk_event_t *eh) {
  ZMK_LISTENER(display, display_event_handler);
  ZMK_SUBSCRIPTION(display, zmk_activity_state_changed);
  
@@ -553,6 +562,28 @@ index a86bfad..1887f4b 100644
 +#endif
 +
  #endif /* IS_ENABLED(CONFIG_ZMK_DISPLAY_BLANK_ON_IDLE) */
+diff --git a/app/src/display/widgets/output_status.c b/app/src/display/widgets/output_status.c
+index 189a7dc..6d04f40 100644
+--- a/app/src/display/widgets/output_status.c
++++ b/app/src/display/widgets/output_status.c
+@@ -62,14 +62,14 @@ static void set_status_symbol(lv_obj_t *label, struct output_status_state state)
+     case ZMK_TRANSPORT_BLE:
+         if (state.active_profile_bonded) {
+             if (state.active_profile_connected) {
+-                snprintf(text, sizeof(text), LV_SYMBOL_WIFI " %i " LV_SYMBOL_OK,
++                snprintf(text, sizeof(text), LV_SYMBOL_BLUETOOTH " %i " LV_SYMBOL_OK,
+                          state.selected_endpoint.ble.profile_index + 1);
+             } else {
+-                snprintf(text, sizeof(text), LV_SYMBOL_WIFI " %i " LV_SYMBOL_CLOSE,
++                snprintf(text, sizeof(text), LV_SYMBOL_BLUETOOTH " %i " LV_SYMBOL_CLOSE,
+                          state.selected_endpoint.ble.profile_index + 1);
+             }
+         } else {
+-            snprintf(text, sizeof(text), LV_SYMBOL_WIFI " %i " LV_SYMBOL_SETTINGS,
++            snprintf(text, sizeof(text), LV_SYMBOL_BLUETOOTH " %i " LV_SYMBOL_SETTINGS,
+                      state.selected_endpoint.ble.profile_index + 1);
+         }
+         break;
 diff --git a/app/src/ext_power_generic.c b/app/src/ext_power_generic.c
 index 3975e03..ad0fd0a 100644
 --- a/app/src/ext_power_generic.c
