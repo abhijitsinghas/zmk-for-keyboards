@@ -54,7 +54,7 @@
             bindings = <&raise_rgb>, <&kp>;
         };
 
-        display_power: display_power {
+        dpwr: dpwr {
             compatible = "zmk,behavior-display-power";
             #binding-cells = <1>;
             display-name = "Display Power";
@@ -229,7 +229,7 @@ BASE_KEY  &trans          &trans          &trans        &trans        &trans    
             bindings = <
 &bootloader  &kp F1          &kp F2          &kp F3          &kp F4          &kp F5             &kp F6          &kp F7          &kp F8     &kp F9     &kp F10    &sys_reset
 &bt BT_CLR   &bt BT_SEL 0    &bt BT_SEL 1    &bt BT_SEL 2    &bt BT_SEL 3    &bt BT_SEL 4       &out OUT_USB    &out OUT_BLE    &out OUT_TOG &rgb_ug RGB_BRI &rgb_ug RGB_BRD &rgb_ug RGB_TOG
-&display_power DISPLAY_POWER_CYCLE_CMD &rgb_ug RGB_HUI &rgb_ug RGB_HUD &rgb_ug RGB_SAI &rgb_ug RGB_SAD &rgb_ug RGB_EFF    &rgb_ug RGB_SPI &rgb_ug RGB_SPD &kp F11    &kp F12    &kp PSCRN  &ext_power EP_TOG
+&dpwr DISPLAY_POWER_CYCLE_CMD &rgb_ug RGB_HUI &rgb_ug RGB_HUD &rgb_ug RGB_SAI &rgb_ug RGB_SAD &rgb_ug RGB_EFF    &rgb_ug RGB_SPI &rgb_ug RGB_SPD &kp F11    &kp F12    &kp PSCRN  &ext_power EP_TOG
                                                        &trans          &trans          &trans             &trans          &trans          &trans
             >;
         };
