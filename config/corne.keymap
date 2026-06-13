@@ -182,16 +182,16 @@ LSHIFT_CAPS  &kp Z  &kp X  &kp C     &kp V          &kp B    &kp N    &kp M     
 
             // -----------------------------------------------------------------------------------------
             // | CAD  |  !  |  @  |  #  |  $  |  %  |   |  ^  |  &  |  *  |  (  |  )  | DEL  |
-            // | CTRL | OSG | OSA | OSC | OSS |MOUS |   |  -  |  =  |  [  |  ]  |  \  |  `   |
-            // | SHFT |     |     |     |     |     |   |  _  |  +  |  {  |  }  | "|" |  ~   |
+            // | CTRL | OSG | OSA | OSC | OSS |MOUS |   |  -  |  =  |  \  |  [  |  ]  |  `   |
+            // | SHFT |     |     |     |     |     |   |  _  |  +  | "|" |  {  |  }  |  ~   |
             //                    | GUI |     |     |   |     |      | ALT |
             // OSG/OSA/OSC/OSS = one-shot GUI/ALT/CTRL/SHIFT
             // CAD = Ctrl + Alt + Delete, MOUS = Toggle Mouse Layer + RGB color
 
             bindings = <
 &cad       &kp EXCL    &kp AT      &kp HASH    &kp DLLR    &kp PRCNT    &kp CARET  &kp AMPS   &kp ASTRK  &kp LPAR  &kp RPAR  &kp DELETE
-&kp LCTRL  &sk LGUI    &sk LALT    &sk LCTRL   &sk LSHFT   MOUSE_TOGGLE  &kp MINUS  &kp EQUAL  &kp LBKT   &kp RBKT  &kp BSLH  &kp GRAVE
-&kp LSHFT  &trans      &trans      &trans      &trans      &trans       &kp UNDER  &kp PLUS   &kp LBRC   &kp RBRC  &kp PIPE  &kp TILDE
+&kp LCTRL  &sk LGUI    &sk LALT    &sk LCTRL   &sk LSHFT   MOUSE_TOGGLE  &kp MINUS  &kp EQUAL  &kp BSLH   &kp LBKT  &kp RBKT  &kp GRAVE
+&kp LSHFT  &trans      &trans      &trans      &trans      &trans       &kp UNDER  &kp PLUS   &kp PIPE   &kp LBRC  &kp RBRC  &kp TILDE
                                   &kp LGUI    &trans      &trans       &trans     &trans     &kp RALT
             >;
         };
