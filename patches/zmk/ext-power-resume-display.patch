@@ -163,7 +163,7 @@ index 0000000..5ede2a8
 +
 +#endif /* DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT) */
 diff --git a/app/src/display/main.c b/app/src/display/main.c
-index a86bfad..7cea060 100644
+index a86bfad..c4d7d22 100644
 --- a/app/src/display/main.c
 +++ b/app/src/display/main.c
 @@ -4,6 +4,8 @@
@@ -231,7 +231,7 @@ index a86bfad..7cea060 100644
  #if DT_HAS_CHOSEN(zmk_display_led)
      led_on(display_led, display_led_idx);
  #endif
-@@ -72,6 +103,220 @@ void unblank_display_cb(struct k_work *work) {
+@@ -72,6 +103,223 @@ void unblank_display_cb(struct k_work *work) {
  #endif // !IS_ENABLED(CONFIG_ARCH_POSIX)
  }
  
@@ -274,6 +274,7 @@ index a86bfad..7cea060 100644
 +        lv_obj_invalidate(screen);
 +    }
 +
++    lv_refr_now(NULL);
 +    lv_task_handler();
 +}
 +
@@ -322,6 +323,7 @@ index a86bfad..7cea060 100644
 +    if (screen != NULL) {
 +        lv_scr_load(screen);
 +        lv_obj_invalidate(screen);
++        lv_refr_now(NULL);
 +        lv_task_handler();
 +    }
 +
@@ -354,6 +356,7 @@ index a86bfad..7cea060 100644
 +    lv_obj_clear_flag(notification_label, LV_OBJ_FLAG_HIDDEN);
 +    lv_scr_load(notification_screen);
 +    lv_obj_invalidate(notification_screen);
++    lv_refr_now(NULL);
 +    lv_task_handler();
 +
 +    if (notification_flash) {
@@ -452,7 +455,7 @@ index a86bfad..7cea060 100644
  #if IS_ENABLED(CONFIG_ZMK_DISPLAY_BLANK_ON_IDLE)
  
  void blank_display_cb(struct k_work *work) {
-@@ -104,7 +349,7 @@ static void stop_display_updates() {
+@@ -104,7 +352,7 @@ static void stop_display_updates() {
  
  #endif
  
@@ -461,18 +464,20 @@ index a86bfad..7cea060 100644
  
  static void initialize_theme() {
  #if IS_ENABLED(CONFIG_LV_USE_THEME_MONO)
-@@ -137,8 +382,9 @@ void initialize_display(struct k_work *work) {
+@@ -137,8 +385,11 @@ void initialize_display(struct k_work *work) {
      }
  
      lv_scr_load(screen);
 +    ensure_notification_label();
++    lv_obj_invalidate(screen);
++    lv_refr_now(NULL);
  
 -    unblank_display_cb(work);
 +    zmk_display_show_for_ms(15000);
  }
  
  K_WORK_DEFINE(init_work, initialize_display);
-@@ -174,9 +420,16 @@ int display_event_handler(const zmk_event_t *eh) {
+@@ -174,9 +425,16 @@ int display_event_handler(const zmk_event_t *eh) {
  
      switch (ev->state) {
      case ZMK_ACTIVITY_ACTIVE:
@@ -490,7 +495,7 @@ index a86bfad..7cea060 100644
      case ZMK_ACTIVITY_SLEEP:
          stop_display_updates();
          break;
-@@ -190,4 +443,66 @@ int display_event_handler(const zmk_event_t *eh) {
+@@ -190,4 +448,66 @@ int display_event_handler(const zmk_event_t *eh) {
  ZMK_LISTENER(display, display_event_handler);
  ZMK_SUBSCRIPTION(display, zmk_activity_state_changed);
  
@@ -558,119 +563,54 @@ index a86bfad..7cea060 100644
 +
  #endif /* IS_ENABLED(CONFIG_ZMK_DISPLAY_BLANK_ON_IDLE) */
 diff --git a/app/src/display/widgets/battery_status.c b/app/src/display/widgets/battery_status.c
-index 22e73fa..b211f85 100644
+index 22e73fa..26b2e3a 100644
 --- a/app/src/display/widgets/battery_status.c
 +++ b/app/src/display/widgets/battery_status.c
-@@ -27,13 +27,13 @@ struct battery_status_state {
- };
- 
- static void set_battery_symbol(lv_obj_t *label, struct battery_status_state state) {
--    char text[9] = {};
-+    char text[10] = {};
- 
-     uint8_t level = state.level;
- 
- #if IS_ENABLED(CONFIG_USB_DEVICE_STACK)
-     if (state.usb_present) {
--        strcpy(text, LV_SYMBOL_CHARGE " ");
-+        strcpy(text, "CHG ");
-     }
- #endif /* IS_ENABLED(CONFIG_USB_DEVICE_STACK) */
- 
-@@ -42,17 +42,7 @@ static void set_battery_symbol(lv_obj_t *label, struct battery_status_state stat
+@@ -42,7 +42,7 @@ static void set_battery_symbol(lv_obj_t *label, struct battery_status_state stat
      snprintf(perc, sizeof(perc), "%3u%%", level);
      strcat(text, perc);
  #else
 -    if (level > 95) {
--        strcat(text, LV_SYMBOL_BATTERY_FULL);
--    } else if (level > 65) {
--        strcat(text, LV_SYMBOL_BATTERY_3);
--    } else if (level > 35) {
--        strcat(text, LV_SYMBOL_BATTERY_2);
--    } else if (level > 5) {
--        strcat(text, LV_SYMBOL_BATTERY_1);
--    } else {
--        strcat(text, LV_SYMBOL_BATTERY_EMPTY);
--    }
-+snprintf(text, sizeof(text), "%3u%%", level);
- #endif
-     lv_label_set_text(label, text);
- }
-diff --git a/app/src/display/widgets/layer_status.c b/app/src/display/widgets/layer_status.c
-index 64cb7c3..e7d43af 100644
---- a/app/src/display/widgets/layer_status.c
-+++ b/app/src/display/widgets/layer_status.c
-@@ -26,13 +26,13 @@ static void set_layer_symbol(lv_obj_t *label, struct layer_status_state state) {
-     if (state.label == NULL || strlen(state.label) == 0) {
-         char text[8] = {};
- 
--        snprintf(text, sizeof(text), LV_SYMBOL_KEYBOARD " %i", state.index);
-+        snprintf(text, sizeof(text), "L %i", state.index);
- 
-         lv_label_set_text(label, text);
-     } else {
-         char text[14] = {};
- 
--        snprintf(text, sizeof(text), LV_SYMBOL_KEYBOARD " %s", state.label);
-+        snprintf(text, sizeof(text), "L %s", state.label);
- 
-         lv_label_set_text(label, text);
-     }
++if (level > 95) {
+         strcat(text, LV_SYMBOL_BATTERY_FULL);
+     } else if (level > 65) {
+         strcat(text, LV_SYMBOL_BATTERY_3);
 diff --git a/app/src/display/widgets/output_status.c b/app/src/display/widgets/output_status.c
-index 189a7dc..23328b0 100644
+index 189a7dc..6d04f40 100644
 --- a/app/src/display/widgets/output_status.c
 +++ b/app/src/display/widgets/output_status.c
-@@ -49,27 +49,27 @@ static void set_status_symbol(lv_obj_t *label, struct output_status_state state)
- 
-     switch (transport) {
-     case ZMK_TRANSPORT_NONE:
--        strcat(text, LV_SYMBOL_CLOSE);
-+        strcat(text, "NO");
-         break;
- 
-     case ZMK_TRANSPORT_USB:
--        strcat(text, LV_SYMBOL_USB);
-+        strcat(text, "USB");
-         if (!connected) {
--            strcat(text, " " LV_SYMBOL_CLOSE);
-+            strcat(text, " X");
-         }
-         break;
- 
+@@ -62,14 +62,14 @@ static void set_status_symbol(lv_obj_t *label, struct output_status_state state)
      case ZMK_TRANSPORT_BLE:
          if (state.active_profile_bonded) {
              if (state.active_profile_connected) {
 -                snprintf(text, sizeof(text), LV_SYMBOL_WIFI " %i " LV_SYMBOL_OK,
-+                snprintf(text, sizeof(text), "BLE %i OK",
++                snprintf(text, sizeof(text), LV_SYMBOL_BLUETOOTH " %i " LV_SYMBOL_OK,
                           state.selected_endpoint.ble.profile_index + 1);
              } else {
 -                snprintf(text, sizeof(text), LV_SYMBOL_WIFI " %i " LV_SYMBOL_CLOSE,
-+                snprintf(text, sizeof(text), "BLE %i X",
++                snprintf(text, sizeof(text), LV_SYMBOL_BLUETOOTH " %i " LV_SYMBOL_CLOSE,
                           state.selected_endpoint.ble.profile_index + 1);
              }
          } else {
 -            snprintf(text, sizeof(text), LV_SYMBOL_WIFI " %i " LV_SYMBOL_SETTINGS,
-+            snprintf(text, sizeof(text), "BLE %i SET",
++            snprintf(text, sizeof(text), LV_SYMBOL_BLUETOOTH " %i " LV_SYMBOL_SETTINGS,
                       state.selected_endpoint.ble.profile_index + 1);
          }
          break;
 diff --git a/app/src/display/widgets/peripheral_status.c b/app/src/display/widgets/peripheral_status.c
-index fdfe4d9..f73c216 100644
+index fdfe4d9..ba85ed2 100644
 --- a/app/src/display/widgets/peripheral_status.c
 +++ b/app/src/display/widgets/peripheral_status.c
-@@ -26,11 +26,8 @@ static struct peripheral_status_state get_state(const zmk_event_t *_eh) {
- }
+@@ -27,7 +27,8 @@ static struct peripheral_status_state get_state(const zmk_event_t *_eh) {
  
  static void set_status_symbol(lv_obj_t *label, struct peripheral_status_state state) {
--    const char *text =
+     const char *text =
 -        state.connected ? (LV_SYMBOL_WIFI " " LV_SYMBOL_OK) : (LV_SYMBOL_WIFI " " LV_SYMBOL_CLOSE);
--
-     LOG_DBG("connected? %s", state.connected ? "true" : "false");
--    lv_label_set_text(label, text);
-+    lv_label_set_text(label, state.connected ? "LINK OK" : "LINK X");
- }
++        state.connected ? (LV_SYMBOL_BLUETOOTH " " LV_SYMBOL_OK)
++                        : (LV_SYMBOL_BLUETOOTH " " LV_SYMBOL_CLOSE);
  
- static void output_status_update_cb(struct peripheral_status_state state) {
+     LOG_DBG("connected? %s", state.connected ? "true" : "false");
+     lv_label_set_text(label, text);
 diff --git a/app/src/ext_power_generic.c b/app/src/ext_power_generic.c
 index 3975e03..ad0fd0a 100644
 --- a/app/src/ext_power_generic.c
