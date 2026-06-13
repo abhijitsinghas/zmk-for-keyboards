@@ -222,14 +222,14 @@ BASE_KEY  &trans          &trans          &trans        &trans        &trans    
             // -----------------------------------------------------------------------------------------
             // | BOOT | F1  | F2  | F3  | F4  | F5   |   | F6  | F7  | F8  | F9  | F10 | RESET|
             // | BTCLR| BT1 | BT2 | BT3 | BT4 | BT5  |   | USB | BLE | OUT | BRI+| BRI-| RGB  |
-            // |      | HUE+| HUE-| SAT+| SAT-| DISP |   | SPD+| SPD-| F11 | F12 | PSCR| EPWR |
+            // | DISP | HUE+| HUE-| SAT+| SAT-| RGBFX|   | SPD+| SPD-| F11 | F12 | PSCR| EPWR |
             //                    |     |     |     |   |     |      |     |
             // Adjust layer RGB color target: red-orange RGB_COLOR_HSB(15, 100, 30)
 
             bindings = <
 &bootloader  &kp F1          &kp F2          &kp F3          &kp F4          &kp F5             &kp F6          &kp F7          &kp F8     &kp F9     &kp F10    &sys_reset
 &bt BT_CLR   &bt BT_SEL 0    &bt BT_SEL 1    &bt BT_SEL 2    &bt BT_SEL 3    &bt BT_SEL 4       &out OUT_USB    &out OUT_BLE    &out OUT_TOG &rgb_ug RGB_BRI &rgb_ug RGB_BRD &rgb_ug RGB_TOG
-&trans       &rgb_ug RGB_HUI &rgb_ug RGB_HUD &rgb_ug RGB_SAI &rgb_ug RGB_SAD &display_power DISPLAY_POWER_CYCLE_CMD &rgb_ug RGB_SPI &rgb_ug RGB_SPD &kp F11    &kp F12    &kp PSCRN  &ext_power EP_TOG
+&display_power DISPLAY_POWER_CYCLE_CMD &rgb_ug RGB_HUI &rgb_ug RGB_HUD &rgb_ug RGB_SAI &rgb_ug RGB_SAD &rgb_ug RGB_EFF    &rgb_ug RGB_SPI &rgb_ug RGB_SPD &kp F11    &kp F12    &kp PSCRN  &ext_power EP_TOG
                                                        &trans          &trans          &trans             &trans          &trans          &trans
             >;
         };
