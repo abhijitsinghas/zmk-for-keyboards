@@ -44,10 +44,10 @@ index 0000000..497c38b
 +#define DISPLAY_POWER_ON_CMD 3
 +#define DISPLAY_POWER_OFF_CMD 4
 diff --git a/app/include/zmk/display.h b/app/include/zmk/display.h
-index d206d35..12e3728 100644
+index d206d35..3eff650 100644
 --- a/app/include/zmk/display.h
 +++ b/app/include/zmk/display.h
-@@ -10,10 +10,22 @@
+@@ -10,10 +10,23 @@
  
  #pragma once
  
@@ -65,6 +65,7 @@ index d206d35..12e3728 100644
 +
 +void zmk_display_force_refresh(void);
 +void zmk_display_show_for_ms(uint32_t timeout_ms);
++enum zmk_display_power_mode zmk_display_power_get_mode(void);
 +void zmk_display_power_set_mode(enum zmk_display_power_mode mode);
 +void zmk_display_power_cycle_mode(void);
  
@@ -72,10 +73,10 @@ index d206d35..12e3728 100644
   * @brief Macro to define a ZMK event listener that handles the thread safety of fetching
 diff --git a/app/src/behaviors/behavior_display_power.c b/app/src/behaviors/behavior_display_power.c
 new file mode 100644
-index 0000000..eedca34
+index 0000000..5ede2a8
 --- /dev/null
 +++ b/app/src/behaviors/behavior_display_power.c
-@@ -0,0 +1,60 @@
+@@ -0,0 +1,83 @@
 +/*
 + * Copyright (c) 2026 The ZMK Contributors
 + *
@@ -96,6 +97,27 @@ index 0000000..eedca34
 +LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 +
 +#if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
++
++static int
++on_keymap_binding_convert_central_state_dependent_params(struct zmk_behavior_binding *binding,
++                                                         struct zmk_behavior_binding_event event) {
++    if (binding->param1 == DISPLAY_POWER_CYCLE_CMD) {
++        switch (zmk_display_power_get_mode()) {
++        case ZMK_DISPLAY_POWER_MODE_OPTIMAL:
++            binding->param1 = DISPLAY_POWER_ON_CMD;
++            break;
++        case ZMK_DISPLAY_POWER_MODE_ON:
++            binding->param1 = DISPLAY_POWER_OFF_CMD;
++            break;
++        case ZMK_DISPLAY_POWER_MODE_OFF:
++        default:
++            binding->param1 = DISPLAY_POWER_OPTIMAL_CMD;
++            break;
++        }
++    }
++
++    return 0;
++}
 +
 +static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
 +                                     struct zmk_behavior_binding_event event) {
@@ -127,6 +149,8 @@ index 0000000..eedca34
 +}
 +
 +static const struct behavior_driver_api behavior_display_power_driver_api = {
++    .binding_convert_central_state_dependent_params =
++        on_keymap_binding_convert_central_state_dependent_params,
 +    .binding_pressed = on_keymap_binding_pressed,
 +    .binding_released = on_keymap_binding_released,
 +    .locality = BEHAVIOR_LOCALITY_GLOBAL,
@@ -137,7 +161,7 @@ index 0000000..eedca34
 +
 +#endif /* DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT) */
 diff --git a/app/src/display/main.c b/app/src/display/main.c
-index a86bfad..44b320c 100644
+index a86bfad..5626207 100644
 --- a/app/src/display/main.c
 +++ b/app/src/display/main.c
 @@ -16,10 +16,22 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
@@ -181,7 +205,7 @@ index a86bfad..44b320c 100644
  #if DT_HAS_CHOSEN(zmk_display_led)
      led_on(display_led, display_led_idx);
  #endif
-@@ -72,6 +93,129 @@ void unblank_display_cb(struct k_work *work) {
+@@ -72,6 +93,131 @@ void unblank_display_cb(struct k_work *work) {
  #endif // !IS_ENABLED(CONFIG_ARCH_POSIX)
  }
  
@@ -261,6 +285,8 @@ index a86bfad..44b320c 100644
 +    k_work_submit_to_queue(zmk_display_work_q(), &show_display_for_work);
 +}
 +
++enum zmk_display_power_mode zmk_display_power_get_mode(void) { return display_power_mode; }
++
 +static void set_display_power_mode_cb(struct k_work *work) {
 +    display_power_mode = requested_display_power_mode;
 +
@@ -311,7 +337,7 @@ index a86bfad..44b320c 100644
  #if IS_ENABLED(CONFIG_ZMK_DISPLAY_BLANK_ON_IDLE)
  
  void blank_display_cb(struct k_work *work) {
-@@ -104,7 +248,7 @@ static void stop_display_updates() {
+@@ -104,7 +250,7 @@ static void stop_display_updates() {
  
  #endif
  
@@ -320,7 +346,7 @@ index a86bfad..44b320c 100644
  
  static void initialize_theme() {
  #if IS_ENABLED(CONFIG_LV_USE_THEME_MONO)
-@@ -138,7 +282,7 @@ void initialize_display(struct k_work *work) {
+@@ -138,7 +284,7 @@ void initialize_display(struct k_work *work) {
  
      lv_scr_load(screen);
  
@@ -329,7 +355,7 @@ index a86bfad..44b320c 100644
  }
  
  K_WORK_DEFINE(init_work, initialize_display);
-@@ -174,9 +318,16 @@ int display_event_handler(const zmk_event_t *eh) {
+@@ -174,9 +320,16 @@ int display_event_handler(const zmk_event_t *eh) {
  
      switch (ev->state) {
      case ZMK_ACTIVITY_ACTIVE:
@@ -347,7 +373,7 @@ index a86bfad..44b320c 100644
      case ZMK_ACTIVITY_SLEEP:
          stop_display_updates();
          break;
-@@ -190,4 +341,46 @@ int display_event_handler(const zmk_event_t *eh) {
+@@ -190,4 +343,46 @@ int display_event_handler(const zmk_event_t *eh) {
  ZMK_LISTENER(display, display_event_handler);
  ZMK_SUBSCRIPTION(display, zmk_activity_state_changed);
  
