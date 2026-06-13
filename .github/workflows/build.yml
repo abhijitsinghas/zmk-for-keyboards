@@ -106,7 +106,9 @@ jobs:
           # The west module cache can restore dirty worktrees from previous runs.
           # Reset before applying, then apply idempotently so reruns are safe.
           git -C zephyr reset --hard HEAD
+          git -C zephyr clean -fd
           git -C zmk reset --hard HEAD
+          git -C zmk clean -fd
 
           apply_patch() {
             repo="$1"
