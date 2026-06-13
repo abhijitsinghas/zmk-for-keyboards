@@ -102,12 +102,28 @@ jobs:
         working-directory: ${{ env.base_dir }}
         run: |
           set -eux
-          git -C zephyr checkout -- drivers/display/ssd1306.c
-          git -C zmk checkout -- app/src/ext_power_generic.c
-          git -C zephyr apply --check "${GITHUB_WORKSPACE}/patches/zephyr/ssd1306-reinit-on-resume.patch"
-          git -C zephyr apply "${GITHUB_WORKSPACE}/patches/zephyr/ssd1306-reinit-on-resume.patch"
-          git -C zmk apply --check "${GITHUB_WORKSPACE}/patches/zmk/ext-power-resume-display.patch"
-          git -C zmk apply "${GITHUB_WORKSPACE}/patches/zmk/ext-power-resume-display.patch"
+
+          # The west module cache can restore dirty worktrees from previous runs.
+          # Reset before applying, then apply idempotently so reruns are safe.
+          git -C zephyr reset --hard HEAD
+          git -C zmk reset --hard HEAD
+
+          apply_patch() {
+            repo="$1"
+            patch_file="$2"
+
+            if git -C "$repo" apply --check "$patch_file"; then
+              git -C "$repo" apply "$patch_file"
+            elif git -C "$repo" apply --reverse --check "$patch_file"; then
+              echo "Patch already applied in $repo: $patch_file"
+            else
+              echo "Patch cannot be applied cleanly in $repo: $patch_file" >&2
+              exit 1
+            fi
+          }
+
+          apply_patch zephyr "${GITHUB_WORKSPACE}/patches/zephyr/ssd1306-reinit-on-resume.patch"
+          apply_patch zmk "${GITHUB_WORKSPACE}/patches/zmk/ext-power-resume-display.patch"
 
       - name: West Zephyr export
         working-directory: ${{ env.base_dir }}
