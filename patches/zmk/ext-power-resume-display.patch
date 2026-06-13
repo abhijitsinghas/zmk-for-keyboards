@@ -557,28 +557,120 @@ index a86bfad..7cea060 100644
 +#endif
 +
  #endif /* IS_ENABLED(CONFIG_ZMK_DISPLAY_BLANK_ON_IDLE) */
+diff --git a/app/src/display/widgets/battery_status.c b/app/src/display/widgets/battery_status.c
+index 22e73fa..b211f85 100644
+--- a/app/src/display/widgets/battery_status.c
++++ b/app/src/display/widgets/battery_status.c
+@@ -27,13 +27,13 @@ struct battery_status_state {
+ };
+ 
+ static void set_battery_symbol(lv_obj_t *label, struct battery_status_state state) {
+-    char text[9] = {};
++    char text[10] = {};
+ 
+     uint8_t level = state.level;
+ 
+ #if IS_ENABLED(CONFIG_USB_DEVICE_STACK)
+     if (state.usb_present) {
+-        strcpy(text, LV_SYMBOL_CHARGE " ");
++        strcpy(text, "CHG ");
+     }
+ #endif /* IS_ENABLED(CONFIG_USB_DEVICE_STACK) */
+ 
+@@ -42,17 +42,7 @@ static void set_battery_symbol(lv_obj_t *label, struct battery_status_state stat
+     snprintf(perc, sizeof(perc), "%3u%%", level);
+     strcat(text, perc);
+ #else
+-    if (level > 95) {
+-        strcat(text, LV_SYMBOL_BATTERY_FULL);
+-    } else if (level > 65) {
+-        strcat(text, LV_SYMBOL_BATTERY_3);
+-    } else if (level > 35) {
+-        strcat(text, LV_SYMBOL_BATTERY_2);
+-    } else if (level > 5) {
+-        strcat(text, LV_SYMBOL_BATTERY_1);
+-    } else {
+-        strcat(text, LV_SYMBOL_BATTERY_EMPTY);
+-    }
++snprintf(text, sizeof(text), "%3u%%", level);
+ #endif
+     lv_label_set_text(label, text);
+ }
+diff --git a/app/src/display/widgets/layer_status.c b/app/src/display/widgets/layer_status.c
+index 64cb7c3..e7d43af 100644
+--- a/app/src/display/widgets/layer_status.c
++++ b/app/src/display/widgets/layer_status.c
+@@ -26,13 +26,13 @@ static void set_layer_symbol(lv_obj_t *label, struct layer_status_state state) {
+     if (state.label == NULL || strlen(state.label) == 0) {
+         char text[8] = {};
+ 
+-        snprintf(text, sizeof(text), LV_SYMBOL_KEYBOARD " %i", state.index);
++        snprintf(text, sizeof(text), "L %i", state.index);
+ 
+         lv_label_set_text(label, text);
+     } else {
+         char text[14] = {};
+ 
+-        snprintf(text, sizeof(text), LV_SYMBOL_KEYBOARD " %s", state.label);
++        snprintf(text, sizeof(text), "L %s", state.label);
+ 
+         lv_label_set_text(label, text);
+     }
 diff --git a/app/src/display/widgets/output_status.c b/app/src/display/widgets/output_status.c
-index 189a7dc..e0e2b3c 100644
+index 189a7dc..23328b0 100644
 --- a/app/src/display/widgets/output_status.c
 +++ b/app/src/display/widgets/output_status.c
-@@ -62,14 +62,14 @@ static void set_status_symbol(lv_obj_t *label, struct output_status_state state)
+@@ -49,27 +49,27 @@ static void set_status_symbol(lv_obj_t *label, struct output_status_state state)
+ 
+     switch (transport) {
+     case ZMK_TRANSPORT_NONE:
+-        strcat(text, LV_SYMBOL_CLOSE);
++        strcat(text, "NO");
+         break;
+ 
+     case ZMK_TRANSPORT_USB:
+-        strcat(text, LV_SYMBOL_USB);
++        strcat(text, "USB");
+         if (!connected) {
+-            strcat(text, " " LV_SYMBOL_CLOSE);
++            strcat(text, " X");
+         }
+         break;
+ 
      case ZMK_TRANSPORT_BLE:
          if (state.active_profile_bonded) {
              if (state.active_profile_connected) {
 -                snprintf(text, sizeof(text), LV_SYMBOL_WIFI " %i " LV_SYMBOL_OK,
-+                snprintf(text, sizeof(text), "BLE %i " LV_SYMBOL_OK,
++                snprintf(text, sizeof(text), "BLE %i OK",
                           state.selected_endpoint.ble.profile_index + 1);
              } else {
 -                snprintf(text, sizeof(text), LV_SYMBOL_WIFI " %i " LV_SYMBOL_CLOSE,
-+                snprintf(text, sizeof(text), "BLE %i " LV_SYMBOL_CLOSE,
++                snprintf(text, sizeof(text), "BLE %i X",
                           state.selected_endpoint.ble.profile_index + 1);
              }
          } else {
 -            snprintf(text, sizeof(text), LV_SYMBOL_WIFI " %i " LV_SYMBOL_SETTINGS,
-+            snprintf(text, sizeof(text), "BLE %i " LV_SYMBOL_SETTINGS,
++            snprintf(text, sizeof(text), "BLE %i SET",
                       state.selected_endpoint.ble.profile_index + 1);
          }
          break;
+diff --git a/app/src/display/widgets/peripheral_status.c b/app/src/display/widgets/peripheral_status.c
+index fdfe4d9..f73c216 100644
+--- a/app/src/display/widgets/peripheral_status.c
++++ b/app/src/display/widgets/peripheral_status.c
+@@ -26,11 +26,8 @@ static struct peripheral_status_state get_state(const zmk_event_t *_eh) {
+ }
+ 
+ static void set_status_symbol(lv_obj_t *label, struct peripheral_status_state state) {
+-    const char *text =
+-        state.connected ? (LV_SYMBOL_WIFI " " LV_SYMBOL_OK) : (LV_SYMBOL_WIFI " " LV_SYMBOL_CLOSE);
+-
+     LOG_DBG("connected? %s", state.connected ? "true" : "false");
+-    lv_label_set_text(label, text);
++    lv_label_set_text(label, state.connected ? "LINK OK" : "LINK X");
+ }
+ 
+ static void output_status_update_cb(struct peripheral_status_state state) {
 diff --git a/app/src/ext_power_generic.c b/app/src/ext_power_generic.c
 index 3975e03..ad0fd0a 100644
 --- a/app/src/ext_power_generic.c
