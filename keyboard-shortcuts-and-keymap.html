@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Corne Keyboard Shortcuts and Keymap</title>
+<style>
+  @page { size: A4 landscape; margin: 14mm; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; color: #111; margin: 0; }
+  h1 { font-size: 26px; margin: 0 0 10px; }
+  h2 { font-size: 17px; margin: 12px 0 6px; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
+  .subtitle { color: #555; margin-bottom: 10px; font-size: 12px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  table { border-collapse: collapse; width: 100%; font-size: 11px; }
+  th, td { border: 1px solid #d8d8d8; padding: 5px 6px; vertical-align: top; }
+  th { background: #f2f2f2; text-align: left; }
+  code { font-family: "SFMono-Regular", Consolas, monospace; background: #f6f6f6; padding: 1px 3px; border-radius: 3px; }
+  .note { margin-top: 10px; font-size: 11px; color: #444; }
+  .page-break { page-break-before: always; }
+  .keymap-page { display: flex; flex-direction: column; height: 100vh; }
+  .keymap-title { font-size: 20px; margin-bottom: 8px; }
+  .keymap-wrap { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .keymap-wrap img { max-width: 100%; max-height: 92vh; object-fit: contain; }
+</style>
+</head>
+<body>
+  <section>
+    <h1>Corne Keyboard Shortcut Reference</h1>
+    <div class="subtitle">Common browser, YouTube/video, tab, and application switching shortcuts for macOS and Windows/Linux.</div>
+
+    <div class="grid">
+      <div>
+        <h2>YouTube / Video</h2>
+        <table>
+          <tr><th>Action</th><th>Shortcut</th></tr>
+          <tr><td>Play / pause</td><td><code>Space</code> or media play/pause</td></tr>
+          <tr><td>Seek back 5 sec</td><td><code>Left Arrow</code></td></tr>
+          <tr><td>Seek forward 5 sec</td><td><code>Right Arrow</code></td></tr>
+          <tr><td>Seek back 10 sec</td><td><code>J</code></td></tr>
+          <tr><td>Seek forward 10 sec</td><td><code>L</code></td></tr>
+          <tr><td>Mute</td><td><code>M</code> or media mute</td></tr>
+          <tr><td>Fullscreen</td><td><code>F</code></td></tr>
+          <tr><td>Captions</td><td><code>C</code></td></tr>
+          <tr><td>Speed slower</td><td><code>Shift + ,</code></td></tr>
+          <tr><td>Speed faster</td><td><code>Shift + .</code></td></tr>
+        </table>
+      </div>
+
+      <div>
+        <h2>Browser Tabs</h2>
+        <table>
+          <tr><th>Action</th><th>macOS</th><th>Windows/Linux</th></tr>
+          <tr><td>Next tab</td><td><code>Ctrl + Tab</code><br><code>Cmd + Shift + ]</code></td><td><code>Ctrl + Tab</code></td></tr>
+          <tr><td>Previous tab</td><td><code>Ctrl + Shift + Tab</code><br><code>Cmd + Shift + [</code></td><td><code>Ctrl + Shift + Tab</code></td></tr>
+          <tr><td>Reopen closed tab</td><td><code>Cmd + Shift + T</code></td><td><code>Ctrl + Shift + T</code></td></tr>
+          <tr><td>Close tab</td><td><code>Cmd + W</code></td><td><code>Ctrl + W</code></td></tr>
+          <tr><td>New tab</td><td><code>Cmd + T</code></td><td><code>Ctrl + T</code></td></tr>
+          <tr><td>Address bar</td><td><code>Cmd + L</code></td><td><code>Ctrl + L</code></td></tr>
+        </table>
+      </div>
+
+      <div>
+        <h2>Application / Window Switching</h2>
+        <table>
+          <tr><th>Action</th><th>macOS</th><th>Windows</th></tr>
+          <tr><td>Next app</td><td><code>Cmd + Tab</code></td><td><code>Alt + Tab</code></td></tr>
+          <tr><td>Previous app</td><td><code>Cmd + Shift + Tab</code></td><td><code>Alt + Shift + Tab</code></td></tr>
+          <tr><td>Task/app overview</td><td><code>Ctrl + Up</code> / Mission Control</td><td><code>Win + Tab</code></td></tr>
+          <tr><td>Same-app window switch</td><td><code>Cmd + `</code></td><td><code>Alt + Esc</code> / app-specific</td></tr>
+          <tr><td>Close window/app tab</td><td><code>Cmd + W</code></td><td><code>Alt + F4</code> / <code>Ctrl + W</code></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h2>ZMK Binding Examples</h2>
+    <table>
+      <tr><th>Action</th><th>ZMK example</th></tr>
+      <tr><td>YouTube seek back/forward 10 sec</td><td><code>&amp;kp J</code> / <code>&amp;kp L</code></td></tr>
+      <tr><td>YouTube seek back/forward 5 sec</td><td><code>&amp;kp LEFT</code> / <code>&amp;kp RIGHT</code></td></tr>
+      <tr><td>Browser next/previous tab, cross-platform</td><td><code>&amp;kp LC(TAB)</code> / <code>&amp;kp LS(LC(TAB))</code></td></tr>
+      <tr><td>macOS app switch next/previous</td><td><code>&amp;kp LG(TAB)</code> / <code>&amp;kp LS(LG(TAB))</code></td></tr>
+      <tr><td>Windows app switch next/previous</td><td><code>&amp;kp LA(TAB)</code> / <code>&amp;kp LS(LA(TAB))</code></td></tr>
+    </table>
+
+    <div class="note">Tip: YouTube shortcuts like <code>J</code>, <code>L</code>, <code>F</code>, <code>M</code>, and <code>C</code> work best when the video/player has focus.</div>
+  </section>
+
+  <section class="page-break keymap-page">
+    <div class="keymap-title">Current Corne Keymap</div>
+    <div class="keymap-wrap">
+      <img src="corne_keymap.svg" alt="Corne keymap">
+    </div>
+  </section>
+</body>
+</html>
