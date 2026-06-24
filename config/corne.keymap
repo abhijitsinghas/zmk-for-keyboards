@@ -39,18 +39,24 @@
         rgb_lower_lt: rgb_lower_layer_tap {
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
-            flavor = "balanced";
+            // Space is a thumb layer-tap. Prefer tap during fast rolls so spaces
+            // are not swallowed when another key is pressed/released first.
+            flavor = "tap-preferred";
             tapping-term-ms = <200>;
             quick-tap-ms = <175>;
+            require-prior-idle-ms = <125>;
             bindings = <&lower_rgb>, <&kp>;
         };
 
         rgb_raise_lt: rgb_raise_layer_tap {
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
-            flavor = "balanced";
+            // Space is a thumb layer-tap. Prefer tap during fast rolls so spaces
+            // are not swallowed when another key is pressed/released first.
+            flavor = "tap-preferred";
             tapping-term-ms = <200>;
             quick-tap-ms = <175>;
+            require-prior-idle-ms = <125>;
             bindings = <&raise_rgb>, <&kp>;
         };
 
