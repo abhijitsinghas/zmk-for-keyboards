@@ -42,7 +42,7 @@
             // Space is a thumb layer-tap. Prefer tap during fast rolls so spaces
             // are not swallowed when another key is pressed/released first.
             flavor = "tap-preferred";
-            tapping-term-ms = <200>;
+            tapping-term-ms = <160>;
             quick-tap-ms = <175>;
             require-prior-idle-ms = <125>;
             bindings = <&lower_rgb>, <&kp>;
@@ -54,7 +54,7 @@
             // Space is a thumb layer-tap. Prefer tap during fast rolls so spaces
             // are not swallowed when another key is pressed/released first.
             flavor = "tap-preferred";
-            tapping-term-ms = <200>;
+            tapping-term-ms = <160>;
             quick-tap-ms = <175>;
             require-prior-idle-ms = <125>;
             bindings = <&raise_rgb>, <&kp>;
