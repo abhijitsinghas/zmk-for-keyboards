@@ -39,10 +39,13 @@
         rgb_lower_lt: rgb_lower_layer_tap {
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
-            // Space is a thumb layer-tap. Prefer tap during fast rolls so spaces
-            // are not swallowed when another key is pressed/released first.
-            flavor = "tap-preferred";
-            tapping-term-ms = <160>;
+            // Balanced + require-prior-idle-ms:
+            // - Standalone space always taps regardless of hold duration. Good for slow/deliberate presses.
+            // - During fast typing rolls (<125ms after last key), space instantly resolves as tap.
+            //   Prevents space from being swallowed by quick subsequent key presses.
+            // - Intentional layer activation still works: press space, then another key.
+            flavor = "balanced";
+            tapping-term-ms = <200>;
             quick-tap-ms = <175>;
             require-prior-idle-ms = <125>;
             bindings = <&lower_rgb>, <&kp>;
@@ -51,10 +54,13 @@
         rgb_raise_lt: rgb_raise_layer_tap {
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
-            // Space is a thumb layer-tap. Prefer tap during fast rolls so spaces
-            // are not swallowed when another key is pressed/released first.
-            flavor = "tap-preferred";
-            tapping-term-ms = <160>;
+            // Balanced + require-prior-idle-ms:
+            // - Standalone space always taps regardless of hold duration. Good for slow/deliberate presses.
+            // - During fast typing rolls (<125ms after last key), space instantly resolves as tap.
+            //   Prevents space from being swallowed by quick subsequent key presses.
+            // - Intentional layer activation still works: press space, then another key.
+            flavor = "balanced";
+            tapping-term-ms = <200>;
             quick-tap-ms = <175>;
             require-prior-idle-ms = <125>;
             bindings = <&raise_rgb>, <&kp>;
