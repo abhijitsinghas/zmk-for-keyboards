@@ -2,6 +2,8 @@ parse_config:
   raw_binding_map:
     "&cad": "CAD"
     "&alt_space": "APP"
+    "&kp LG(LS(N3))": "SS3"
+    "&kp LG(LS(N5))": "SS5"
     "&caps_word": "CAPW"
     "&bootloader": "BOOT"
     "&sys_reset": "RESET"
